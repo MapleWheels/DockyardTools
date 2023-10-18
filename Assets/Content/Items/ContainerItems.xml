@@ -1,0 +1,9 @@
+﻿<Items>
+    <Item name="Single Ammunition Shelf" identifier="singlecoilgunammoshelf" tags="container,ammoboxcontainer" linkable="true" pickdistance="150" waterproof="true" scale="0.5">
+        <Sprite texture="Content/Items/Containers/containers.png" depth="0.84" sourcerect="188,912,140,110" canflipx="false" origin="0.5,0.5" />
+        <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="70,-52" iteminterval="0,-96" msg="ItemMsgInteractSelect">
+            <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
+            <Containable items="ammobox,coilgunammo,depthchargeammo" />
+        </ItemContainer>
+    </Item>
+</Items>

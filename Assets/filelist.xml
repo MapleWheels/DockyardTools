@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="DockyardTools" modversion="1.0" corepackage="false">
+  <Item file="%ModDir%\Content\Items\VerticalEngines.xml" />
+  <Item file="%ModDir%\Content\Items\SignalItems.xml" />
+  <Item file="%ModDir%\Content\Items\ContainerItems.xml" />
+</contentpackage>

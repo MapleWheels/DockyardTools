@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="ETCU" identifier="engtrimcontroller" category="Electrical" Tags="smallitem,logic" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
+        impactsoundtag="impact_metal_light" isshootable="false" linkable="true" allowedlinks="hull,navterminal">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <ETCU UseEngineControlUnit="true"/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+	  <input name="power_in" displayname="connection.powerin" />
+      <input name="CmdVelX" displayname="Velocity_X" />
+      <input name="CmdVelY" displayname="Velocity_Y" />
+      <input name="CurVelX" displayname="Current_Vel_X" />
+      <input name="CurVelY" displayname="Current_Vel_Y" />
+      <input name="setactiveoutputscale" displayname="Set_OutputScale_Active" />
+      <output name="VelXOut" displayname="Velocity_X_Out" />
+      <output name="VelYOut" displayname="Velocity_Y_Out" />
+      <output name="TrimPumpLevelOut" displayname="TrimPumpLevel" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="PlayerInputCapture" identifier="playerinputcapture" category="Electrical" Tags="smallitem,logic" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5"
+        impactsoundtag="impact_metal_light" isshootable="false" linkable="true" allowedlinks="periscope">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <PlayerInputCapture/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <output name="VelXOut" displayname="Velocity_X_Out" />
+      <output name="VelYOut" displayname="Velocity_Y_Out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="ESCU" identifier="elecsyscontroller" category="Electrical" Tags="smallitem,logic" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
+        impactsoundtag="impact_metal_light" isshootable="false" linkable="true" allowedlinks="reactor,powercontainer,battery,supercapacitor,psource_buffer,psource_standby,psource_reactorlow,psource_reactorhigh">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <ESCU />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="set_active" displayname="Set_Active" />
+      <input name="current_load" displayname="Current_Load" />
+      <input name="dockpoweroverride" displayname="Dock Power Override" />
+      <input name="lowpowerreactorsonly" displayname="Low Power Only" />
+      <input name="reactorpoweroff" displayname="Reactor Power Off"/>
+      <output name="relaylowpowerout" displayname="Reactor Low Power Relay" />
+      <output name="relayhighpowerout" displayname="Reactor High Power Relay" />
+      <output name="relaystandbypowerout" displayname="Standby Power Relay" />
+      <output name="relaydockpowerout" displayname="Dock Power Relay" />
+      <output name="standbypowerout" displayname="Standby Pwr (kW)" />
+      <output name="standbypowerpercentout" displayname="Standby Pwr (%)" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="MachineStateReader" identifier="machinestatereader" category="Electrical" Tags="smallitem,logic" maxstacksize="8" 
+        cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" 
+        isshootable="false" linkable="true" allowedlinks="turretammosource,fabricator,deconstructor">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <MachineStateReader/>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="power_in" displayname="connection.powerin" />
+      <output name="item0_statuscondition" displayname="Linked Item 0 State" />
+      <output name="item1_statuscondition" displayname="Linked Item 1 State" />
+      <output name="item2_statuscondition" displayname="Linked Item 2 State" />
+      <output name="item3_statuscondition" displayname="Linked Item 3 State" />
+      <output name="item4_statuscondition" displayname="Linked Item 4 State" />
+      <output name="item5_statuscondition" displayname="Linked Item 5 State" />
+    </ConnectionPanel>
+  </Item>
+
+  <Item name="SignalCounter" identifier="signalcounter" category="Electrical" Tags="smallitem,logic" maxstacksize="8"
+        cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light"
+        isshootable="false" linkable="false">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <SignalCounter />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="advancenext" displayname="Advance Next" />
+      <output name="output0" displayname="Output 0" />
+      <output name="output1" displayname="Output 1" />
+      <output name="output2" displayname="Output 2" />
+      <output name="output3" displayname="Output 3" />
+      <output name="output4" displayname="Output 4" />
+      <output name="output5" displayname="Output 5" />
+      <output name="output6" displayname="Output 6" />
+      <output name="output7" displayname="Output 7" />
+    </ConnectionPanel>
+  </Item>
+</Items>
