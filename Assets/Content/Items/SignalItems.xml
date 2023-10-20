@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="ETCU" identifier="engtrimcontroller" category="Electrical" Tags="smallitem,logic" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
+  <Item name="ETCU" identifier="engtrimcontroller" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
         impactsoundtag="impact_metal_light" isshootable="false" linkable="true" allowedlinks="hull,navterminal">
     <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
     <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
@@ -23,7 +23,7 @@
       <output name="TrimPumpLevelOut" displayname="TrimPumpLevel" />
     </ConnectionPanel>
   </Item>
-  <Item name="PlayerInputCapture" identifier="playerinputcapture" category="Electrical" Tags="smallitem,logic" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5"
+  <Item name="PlayerInputCapture" identifier="playerinputcapture" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5"
         impactsoundtag="impact_metal_light" isshootable="false" linkable="true" allowedlinks="periscope">
     <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
     <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
@@ -39,7 +39,7 @@
       <output name="VelYOut" displayname="Velocity_Y_Out" />
     </ConnectionPanel>
   </Item>
-  <Item name="ESCU" identifier="elecsyscontroller" category="Electrical" Tags="smallitem,logic" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
+  <Item name="ESCU" identifier="elecsyscontroller" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
         impactsoundtag="impact_metal_light" isshootable="false" linkable="true" allowedlinks="reactor,powercontainer,battery,supercapacitor,psource_buffer,psource_standby,psource_reactorlow,psource_reactorhigh">
     <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
     <Sprite texture="luacomp_sprite.png" depth="0.8" sourcerect="0,0,32,32" origin="0.5,0.5" />
@@ -65,7 +65,7 @@
       <output name="standbypowerpercentout" displayname="Standby Pwr (%)" />
     </ConnectionPanel>
   </Item>
-  <Item name="MachineStateReader" identifier="machinestatereader" category="Electrical" Tags="smallitem,logic" maxstacksize="8" 
+  <Item name="MachineStateReader" identifier="machinestatereader" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8" 
         cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" 
         isshootable="false" linkable="true" allowedlinks="turretammosource,fabricator,deconstructor">
     <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
@@ -88,7 +88,7 @@
     </ConnectionPanel>
   </Item>
 
-  <Item name="SignalCounter" identifier="signalcounter" category="Electrical" Tags="smallitem,logic" maxstacksize="8"
+  <Item name="SignalCounter" identifier="signalcounter" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8"
         cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light"
         isshootable="false" linkable="false">
     <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />

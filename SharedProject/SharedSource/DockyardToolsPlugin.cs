@@ -16,8 +16,9 @@ namespace DockyardTools
 
         public void OnLoadCompleted()
         {
-            // After all plugins have loaded
-            // Put code that interacts with other plugins here.
+#if CLIENT
+            PostLoadClient();
+#endif
         }
 
         public void PreInitPatching()

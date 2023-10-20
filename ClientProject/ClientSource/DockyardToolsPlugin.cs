@@ -12,38 +12,47 @@ namespace DockyardTools
 {
     public partial class DockyardToolsPlugin : IAssemblyPlugin
     {
-        public static readonly IConfigControl ControlForwardX = ConfigManager.AddConfigKeyOrMouseBind(
-            "Vehicle-Forward",
-            nameof(DockyardTools), Keys.D,
-            displayData: new DisplayData(
-                "Vehicle-Forward", nameof(DockyardTools), "Vehicle-Forward", nameof(DockyardTools))
-        );
-    
-        public static readonly IConfigControl ControlReverseX = ConfigManager.AddConfigKeyOrMouseBind(
-            "Vehicle-Reverse",
-            nameof(DockyardTools), Keys.A,
-            displayData: new DisplayData(
-                "Vehicle-Reverse", nameof(DockyardTools), "Vehicle-Reverse", nameof(DockyardTools))
-        );
-    
-        public static readonly IConfigControl ControlUpY = ConfigManager.AddConfigKeyOrMouseBind(
-            "Vehicle-Up",
-            nameof(DockyardTools), Keys.W,
-            displayData: new DisplayData(
-                "Vehicle-Up", nameof(DockyardTools), "Vehicle-Up", nameof(DockyardTools))
-        );
-    
-        public static readonly IConfigControl ControlDownY = ConfigManager.AddConfigKeyOrMouseBind(
-            "Vehicle-Down",
-            nameof(DockyardTools), Keys.S,
-            displayData: new DisplayData(
-                "Vehicle-Down", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
-        );
+        public static IConfigControl ControlForwardX { get; private set; }
+        public static IConfigControl ControlReverseX { get; private set; }
+        public static IConfigControl ControlUpY { get; private set; }
+        public static IConfigControl ControlDownY { get; private set; }
+        public static IConfigRangeFloat ControlSensitivity { get; private set; }
 
-        public static readonly IConfigRangeFloat ControlSensitivity = ConfigManager.AddConfigRangeFloat(
-            "Vehicle-ControlSensitity",
-            nameof(DockyardTools),
-            0.6f, 0.1f, 1.9f, 19, //max value cannot be >= than OutputDeadZone
-            NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
+        private void PostLoadClient()
+        {
+            ControlForwardX = ConfigManager.AddConfigKeyOrMouseBind(
+                "Vehicle-Forward",
+                nameof(DockyardTools), Keys.D,
+                displayData: new DisplayData(
+                    "Vehicle-Forward", nameof(DockyardTools), "Vehicle-Forward", nameof(DockyardTools))
+            );
+        
+            ControlReverseX = ConfigManager.AddConfigKeyOrMouseBind(
+                "Vehicle-Reverse",
+                nameof(DockyardTools), Keys.A,
+                displayData: new DisplayData(
+                    "Vehicle-Reverse", nameof(DockyardTools), "Vehicle-Reverse", nameof(DockyardTools))
+            );
+        
+            ControlUpY = ConfigManager.AddConfigKeyOrMouseBind(
+                "Vehicle-Up",
+                nameof(DockyardTools), Keys.W,
+                displayData: new DisplayData(
+                    "Vehicle-Up", nameof(DockyardTools), "Vehicle-Up", nameof(DockyardTools))
+            );
+        
+            ControlDownY = ConfigManager.AddConfigKeyOrMouseBind(
+                "Vehicle-Down",
+                nameof(DockyardTools), Keys.S,
+                displayData: new DisplayData(
+                    "Vehicle-Down", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
+            );
+
+            ControlSensitivity = ConfigManager.AddConfigRangeFloat(
+                "Vehicle-ControlSensitity",
+                nameof(DockyardTools),
+                0.6f, 0.1f, 1.9f, 19, //max value cannot be >= than OutputDeadZone
+                NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
+        }
     }
 }
