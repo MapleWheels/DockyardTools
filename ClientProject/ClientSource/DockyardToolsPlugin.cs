@@ -17,6 +17,7 @@ namespace DockyardTools
         public static IConfigControl ControlUpY { get; private set; }
         public static IConfigControl ControlDownY { get; private set; }
         public static IConfigRangeFloat ControlSensitivity { get; private set; }
+        public static IConfigControl ControlToggleDocking { get; private set; }
 
         private void PostLoadClient()
         {
@@ -48,11 +49,19 @@ namespace DockyardTools
                     "Vehicle-Down", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
             );
 
+            ControlToggleDocking = ConfigManager.AddConfigKeyOrMouseBind(
+                "Vehicle-ToggleDocking",
+                nameof(DockyardTools), Keys.Z,
+                displayData: new DisplayData(
+                    "Vehicle-ToggleDocking", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
+            );
+            
             ControlSensitivity = ConfigManager.AddConfigRangeFloat(
                 "Vehicle-ControlSensitity",
                 nameof(DockyardTools),
                 0.6f, 0.1f, 1.9f, 19, //max value cannot be >= than OutputDeadZone
                 NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
+            
         }
     }
 }
