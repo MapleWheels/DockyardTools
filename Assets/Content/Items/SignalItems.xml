@@ -112,4 +112,26 @@
       <output name="output7" displayname="Output 7" />
     </ConnectionPanel>
   </Item>
+  <Item name="DoorController" identifier="doorcontroller" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8"
+        cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light"
+        isshootable="false" linkable="false">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.7" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <SignalCounter />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="in_smoke" displayname="Smoke" />
+      <input name="in_waterpercent" displayname="Water %" />
+      <input name="in_monster" displayname="Monster Motion" />
+      <input name="in_motion" displayname="Friendly Motion" />
+      <input name="in_setstate" displayname="Force State Set" />
+      <input name="in_lockstate" displayname="Enable Force State" />
+      <output name="out_isopen" displayname="Door State" />
+    </ConnectionPanel>
+  </Item>
 </Items>
