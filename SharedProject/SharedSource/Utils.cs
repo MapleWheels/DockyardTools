@@ -16,7 +16,7 @@ public static class Utils
 
     public static float Clamp(this float value, float min, float max) => Math.Clamp(value, min, max);
     
-    public static float TrySetFloat(string s)
+    public static float TryGetFloat(string s)
     {
         if (float.TryParse(s, out float v))
         {
@@ -26,7 +26,7 @@ public static class Utils
         return 0f;
     }
         
-    public static bool TrySetBool(string s)
+    public static bool TryGetBool(string s)
     {
         if (bool.TryParse(s, out bool b1))
         {

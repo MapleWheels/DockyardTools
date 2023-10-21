@@ -216,21 +216,21 @@ public class ESCU : Powered, IClientSerializable, IServerSerializable
 
         if (connection.LowerInvariantNameIs(S_DOCKPOWEROVERRIDE))
         {
-            _dockPowerOnlyOverride = Utils.TrySetBool(signal.value);
+            _dockPowerOnlyOverride = Utils.TryGetBool(signal.value);
             _networkHelper.NetworkUpdateReady();
             return;
         }
         
         if (connection.LowerInvariantNameIs(S_LOWPOWERONLY))
         {
-            _lowPowerReactorsOnly = Utils.TrySetBool(signal.value);
+            _lowPowerReactorsOnly = Utils.TryGetBool(signal.value);
             _networkHelper.NetworkUpdateReady();
             return;
         }
 
         if (connection.LowerInvariantNameIs(S_REACTORPOWEROFF))
         {
-            _reactorPowerOff = Utils.TrySetBool(signal.value);
+            _reactorPowerOff = Utils.TryGetBool(signal.value);
             _networkHelper.NetworkUpdateReady();
             return;
         }

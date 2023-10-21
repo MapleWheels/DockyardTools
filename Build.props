@@ -2,7 +2,7 @@
     <PropertyGroup>
         <!-- IMPORTANT: Should point to <Barotrauma_Install>\LocalMods\<MyModName>\ -->
         <!-- IMPORTANT: ModDeplyDir Path must end with '\' -->
-        <ModDeployDir>..\Release\</ModDeployDir>
+        <ModDeployDir>E:\Program Files (x86)\SteamLibrary\steamapps\common\Barotrauma\LocalMods\DockyardTools\</ModDeployDir>
         <!-- IMPORTANT: Avoid the use of special (IE: / : ; , \ < > ?) (periods "." are good) and non-english characters in the AssemblyName.-->
         <AssemblyName>DockyardTools</AssemblyName>
     </PropertyGroup>

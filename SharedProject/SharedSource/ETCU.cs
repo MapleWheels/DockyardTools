@@ -255,19 +255,19 @@ public partial class ETCU : Powered, IClientSerializable, IServerSerializable
         switch (connection.Name)
         {
             case S_CMDVELX:
-                CmdVelocityX = Utils.TrySetFloat(signal.value);
+                CmdVelocityX = Utils.TryGetFloat(signal.value);
                 break;
             case S_CMDVELY:
-                CmdVelocityY = Utils.TrySetFloat(signal.value);
+                CmdVelocityY = Utils.TryGetFloat(signal.value);
                 break;
             case S_CURVELX:
-                CurrVelX = Utils.TrySetFloat(signal.value);
+                CurrVelX = Utils.TryGetFloat(signal.value);
                 break;
             case S_CURVELY:
-                CurrVelY = Utils.TrySetFloat(signal.value);
+                CurrVelY = Utils.TryGetFloat(signal.value);
                 break;
             case S_SETACTIVEOUTPUTSCALE:
-                ScaleOutputActive = Utils.TrySetBool(signal.value);
+                ScaleOutputActive = Utils.TryGetBool(signal.value);
                 break;
         }
     }
