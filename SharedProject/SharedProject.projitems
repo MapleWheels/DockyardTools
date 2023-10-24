@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\AssemblySettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\DoorController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\DroneWifiDispatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\ESCU.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\ETCU.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\MachineStateReader.cs" />
