@@ -66,7 +66,7 @@ public partial class DroneWifiDispatcher : ItemComponent
             return;
         }
 
-        if (droneId is < 0 or > byte.MaxValue)
+        if (droneId is < 0 or > int.MaxValue)
         {
             ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: The Wifi Channel if {droneId} is out of range.");
             IsActive = false;
