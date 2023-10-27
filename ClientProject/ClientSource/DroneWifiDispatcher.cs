@@ -7,5 +7,6 @@ public partial class DroneWifiDispatcher : IServerSerializable
     public void ClientEventRead(IReadMessage msg, float sendingTime)
     {
         DroneId = msg.ReadByte();
+        SendIdChannels();
     }
 }

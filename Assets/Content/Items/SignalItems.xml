@@ -134,4 +134,28 @@
       <output name="out_isopen" displayname="Door State" />
     </ConnectionPanel>
   </Item>
+  <Item name="DroneWifiDispatcher" identifier="dronewifidispatcher" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8"
+        cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light"
+        isshootable="false" linkable="true" allowedlinks="dockingport,smartdockingport">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.7" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <SignalCounter />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <output name="out_setch0_velx_in" displayname="WiCh VelX In" />
+      <output name="out_setch1_vely_in" displayname="WiCh VelY In" />
+      <output name="out_setch2_turretang_in" displayname="WiCh Turret Ang In" />
+      <output name="out_setch3_turrettrig_in" displayname="WiCh Turret Trig In" />
+      <output name="out_setch4_dockingcmd_in" displayname="WiCh Docking Sig In" />
+      <output name="out_setch5_velx_out" displayname="WiCh VelX Out" />
+      <output name="out_setch6_vely_out" displayname="WiCh VelY Out" />
+      <output name="out_setch7_depth_out" displayname="WiCh Depth Out" />
+      <output name="out_setch8_battchg_out" displayname="WiCh Batt Chrg Out" />
+    </ConnectionPanel>
+  </Item>  
 </Items>
