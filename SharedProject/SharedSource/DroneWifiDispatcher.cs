@@ -22,7 +22,7 @@ public partial class DroneWifiDispatcher : ItemComponent
     
     private static readonly Regex REGEX_DOCKTAGID = new Regex("^dronewifich=[0-9]+$");
 
-    public byte DroneId { get; private set; }
+    public int DroneId { get; private set; }
     public DockingPort? LinkedDockingPort { get; private set; } = null;
     
     public DroneWifiDispatcher(Item item, ContentXElement element) : base(item, element)
@@ -73,7 +73,7 @@ public partial class DroneWifiDispatcher : ItemComponent
             return;
         }
 
-        DroneId = (byte)droneId;
+        DroneId = droneId;
         
         // send values
 #if SERVER

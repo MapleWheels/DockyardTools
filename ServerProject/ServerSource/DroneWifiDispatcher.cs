@@ -6,6 +6,6 @@ public partial class DroneWifiDispatcher : IServerSerializable
 {
     public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
     {
-        msg.WriteByte(DroneId);
+        msg.WriteInt32(DroneId);
     }
 }
