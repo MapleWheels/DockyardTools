@@ -11,6 +11,7 @@ public partial class PlayerInputCapture : ItemComponent
 
     public const string S_VELX_OUT = "VelXOut";
     public const string S_VELY_OUT = "VelYOut";
+    public const string S_DOCKCMD_OUT = "DockSignalOut";
 
     #endregion
     
@@ -18,6 +19,7 @@ public partial class PlayerInputCapture : ItemComponent
 
     private readonly SimpleSynchroHelper<PlayerInputCapture> _networkHelper;
     private Vector2 _thrustVec;
+    private bool _dockingSignal;
     public ref readonly Vector2 ThrustVec => ref _thrustVec;
     private int _ticksUntilWiringUpdate = 0;
     private ImmutableList<Controller> _linkedControllers = ImmutableList<Controller>.Empty;
@@ -66,6 +68,7 @@ public partial class PlayerInputCapture : ItemComponent
             else if (controller.User is null && !_zeroOutput)
             {
                 _thrustVec = Vector2.Zero;
+                _dockingSignal = false;
                 _zeroOutput = true;
                 _networkHelper.NetworkUpdateReady();
             }
@@ -84,17 +87,20 @@ public partial class PlayerInputCapture : ItemComponent
     {
         item.SendSignal(_thrustVec.X.FormatToDecimalPlace(1), S_VELX_OUT);
         item.SendSignal(_thrustVec.Y.FormatToDecimalPlace(1), S_VELY_OUT);
+        item.SendSignal(_dockingSignal ? "1" : "0", S_DOCKCMD_OUT);
     }
 
     private void ReadEventData(IReadMessage msg)
     {
         _thrustVec.X = msg.ReadRangedSingle(-100, 100, 12);
         _thrustVec.Y = msg.ReadRangedSingle(-100, 100, 12);
+        _dockingSignal = msg.ReadBoolean();
     }
 
     private void WriteEventData(IWriteMessage msg)
     {
         msg.WriteRangedSingle(_thrustVec.X, -100, 100, 12);
         msg.WriteRangedSingle(_thrustVec.Y, -100, 100, 12);
+        msg.WriteBoolean(_dockingSignal);
     }
 }

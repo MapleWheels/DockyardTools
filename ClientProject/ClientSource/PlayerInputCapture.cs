@@ -103,6 +103,8 @@ public partial class PlayerInputCapture : IClientSerializable, IServerSerializab
                 _thrustVec.Y = +0f;
             }
         }
+
+        _dockingSignal = DockyardToolsPlugin.ControlToggleDocking.IsHit();
     }
     
     

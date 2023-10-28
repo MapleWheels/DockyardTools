@@ -35,8 +35,9 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem items="screwdriver" type="Equipped" />
-      <output name="VelXOut" displayname="Velocity_X_Out" />
-      <output name="VelYOut" displayname="Velocity_Y_Out" />
+      <output name="VelXOut" displayname="Velocity_X Out" />
+      <output name="VelYOut" displayname="Velocity_Y Out" />
+      <output name="DockSignalOut" displayname="Docking Signal Out" />
     </ConnectionPanel>
   </Item>
   <Item name="ESCU" identifier="elecsyscontroller" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
