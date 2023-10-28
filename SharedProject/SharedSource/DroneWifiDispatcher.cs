@@ -36,12 +36,20 @@ public partial class DroneWifiDispatcher : ItemComponent
                 .FirstOrDefault(me => me is Item it && it.GetComponent<DockingPort>() is not null, null) is not Item dockPortItem
             || !dockPortItem.HasTag(S_TAG_LINKED_PORT))
         {
+            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, smartdockingport tag not found!");
+            IsActive = false;
+            return;
+        }
+
+        if (dockPortItem.GetComponent<DockingPort>().DockingTarget is null)
+        {
+            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, drone is not docked!");
             IsActive = false;
             return;
         }
         
-        LinkedDockingPort = dockPortItem.GetComponent<DockingPort>();
-        var droneIdString = dockPortItem.GetTags()
+        LinkedDockingPort = dockPortItem.GetComponent<DockingPort>().DockingTarget;
+        var droneIdString = LinkedDockingPort.Item.GetTags()
             .FirstOrDefault(tag => !tag.IsEmpty && REGEX_DOCKTAGID.IsMatch(tag.Value), Identifier.Empty);
         if (droneIdString.Equals(Identifier.Empty))
         {
