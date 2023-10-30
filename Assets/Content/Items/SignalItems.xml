@@ -137,14 +137,14 @@
   </Item>
   <Item name="DroneWifiDispatcher" identifier="dronewifidispatcher" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8"
         cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light"
-        isshootable="false" linkable="true" allowedlinks="dockingport,smartdockingport">
+        isshootable="false" linkable="true" allowedlinks="dock,dockingport,smartdockingport">
     <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
     <Sprite texture="luacomp_sprite.png" depth="0.7" sourcerect="0,0,64,52" origin="0.5,0.5" />
     <Body width="32" height="24" density="30" />
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
       <RequiredItem items="wrench" type="Equipped" />
     </Holdable>
-    <SignalCounter />
+    <DroneWifiDispatcher/>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem items="screwdriver" type="Equipped" />
