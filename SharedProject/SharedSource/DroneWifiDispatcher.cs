@@ -23,7 +23,7 @@ public partial class DroneWifiDispatcher : ItemComponent
     private static readonly Regex REGEX_DOCKTAGID = new Regex("^dronewifich=[0-9]+$");
 
     public int DroneId { get; private set; }
-    public DockingPort? LinkedDockingPort { get; private set; } = null;
+    public DockingPort? MainDockingPort { get; private set; } = null;
     
     public DroneWifiDispatcher(Item item, ContentXElement element) : base(item, element)
     {
@@ -41,15 +41,35 @@ public partial class DroneWifiDispatcher : ItemComponent
             return;
         }
 
-        if (dockPortItem.GetComponent<DockingPort>().DockingTarget is null)
+        if (dockPortItem.GetComponent<DockingPort>() is {} port)
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, drone is not docked!");
+            MainDockingPort = port;
+            return;
+        }
+        else
+        {
             IsActive = false;
             return;
         }
+    }
+
+    public override void Update(float deltaTime, Camera cam)
+    {
+        base.Update(deltaTime, cam);
+        if (!IsActive)
+            return;
+        if (MainDockingPort is null)
+        {
+            IsActive = false;
+            return;
+        }
+
+        if (MainDockingPort.DockingTarget is null)
+            return;
         
-        LinkedDockingPort = dockPortItem.GetComponent<DockingPort>().DockingTarget;
-        var droneIdString = LinkedDockingPort.Item.GetTags()
+        var linkedDockingPort = MainDockingPort.DockingTarget;
+        
+        var droneIdString = linkedDockingPort.Item.GetTags()
             .FirstOrDefault(tag => !tag.IsEmpty && REGEX_DOCKTAGID.IsMatch(tag.Value), Identifier.Empty);
         if (droneIdString.Equals(Identifier.Empty))
         {
@@ -76,7 +96,7 @@ public partial class DroneWifiDispatcher : ItemComponent
 
         if (droneId is < 0 or > int.MaxValue)
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: The Wifi Channel if {droneId} is out of range.");
+            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: The Wifi Channel of {droneId} is out of range.");
             IsActive = false;
             return;
         }
@@ -93,10 +113,14 @@ public partial class DroneWifiDispatcher : ItemComponent
             SendIdChannels();
         }
 #endif
+        
+        // we're done
+        IsActive = false;
     }
 
     private void SendIdChannels()
     {
+        ModUtils.Logging.PrintMessage($"{nameof(DroneWifiDispatcher)}: Connected with ID: {DroneId}. Setting channels.");
         int ch = DroneId;
         item.SendSignal(ch.ToString(), S_WIFICHANNEL_VELX_IN);
         ch++;
