@@ -23,28 +23,28 @@ namespace DockyardTools
         {
             ControlForwardX = ConfigManager.AddConfigKeyOrMouseBind(
                 "Vehicle-Forward",
-                nameof(DockyardTools), Keys.D,
+                nameof(DockyardTools), Keys.Right,
                 displayData: new DisplayData(
                     "Vehicle-Forward", nameof(DockyardTools), "Vehicle-Forward", nameof(DockyardTools))
             );
         
             ControlReverseX = ConfigManager.AddConfigKeyOrMouseBind(
                 "Vehicle-Reverse",
-                nameof(DockyardTools), Keys.A,
+                nameof(DockyardTools), Keys.Left,
                 displayData: new DisplayData(
                     "Vehicle-Reverse", nameof(DockyardTools), "Vehicle-Reverse", nameof(DockyardTools))
             );
         
             ControlUpY = ConfigManager.AddConfigKeyOrMouseBind(
                 "Vehicle-Up",
-                nameof(DockyardTools), Keys.W,
+                nameof(DockyardTools), Keys.Up,
                 displayData: new DisplayData(
                     "Vehicle-Up", nameof(DockyardTools), "Vehicle-Up", nameof(DockyardTools))
             );
         
             ControlDownY = ConfigManager.AddConfigKeyOrMouseBind(
                 "Vehicle-Down",
-                nameof(DockyardTools), Keys.S,
+                nameof(DockyardTools), Keys.Down,
                 displayData: new DisplayData(
                     "Vehicle-Down", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
             );
@@ -59,7 +59,7 @@ namespace DockyardTools
             ControlSensitivity = ConfigManager.AddConfigRangeFloat(
                 "Vehicle-ControlSensitity",
                 nameof(DockyardTools),
-                0.6f, 0.1f, 1.9f, 19, //max value cannot be >= than OutputDeadZone
+                20f, 4f, 100f, 19, //max value cannot be >= than OutputDeadZone
                 NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
             
         }

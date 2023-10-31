@@ -9,102 +9,42 @@ public partial class PlayerInputCapture : IClientSerializable, IServerSerializab
 {
     private void UpdatePlayerInput()
     {
-        bool xHit = false, yHit = false;
-        if (DockyardToolsPlugin.ControlForwardX.IsHit())
+        float deltaX = 0f, deltaY = 0f;
+        if (DockyardToolsPlugin.ControlForwardX.Value?.IsDown() ?? false)
         {
-            xHit = true;
-            _thrustVec.X = Math.Min(_thrustVec.X + DockyardToolsPlugin.ControlSensitivity.Value, 100f);
+            deltaX += DockyardToolsPlugin.ControlSensitivity.Value;
         }
 
-        if (DockyardToolsPlugin.ControlReverseX.IsHit())
+        if (DockyardToolsPlugin.ControlReverseX.Value?.IsDown() ?? false)
         {
-            xHit = true;
-            _thrustVec.X = Math.Max(-100f, _thrustVec.X - DockyardToolsPlugin.ControlSensitivity.Value);
+            deltaX -= DockyardToolsPlugin.ControlSensitivity.Value;
         }
         
-        if (DockyardToolsPlugin.ControlUpY.IsHit())
+        if (DockyardToolsPlugin.ControlUpY.Value?.IsDown() ?? false)
         {
-            yHit = true;
-            _thrustVec.Y = Math.Min(_thrustVec.Y + DockyardToolsPlugin.ControlSensitivity.Value, 100f);
+            deltaY -= DockyardToolsPlugin.ControlSensitivity.Value;   // y is inverted
         }
 
-        if (DockyardToolsPlugin.ControlDownY.IsHit())
+        if (DockyardToolsPlugin.ControlDownY.Value?.IsDown() ?? false)
         {
-            yHit = true;
-            _thrustVec.Y = Math.Max(-100f, _thrustVec.Y - DockyardToolsPlugin.ControlSensitivity.Value);
+            deltaY += DockyardToolsPlugin.ControlSensitivity.Value;   // y is inverted
         }
 
-        // decay
-        if (!xHit)
+        _thrustVec.X = Math.Clamp(_thrustVec.X + deltaX, -100f, 100f);
+        _thrustVec.Y = Math.Clamp(_thrustVec.Y + deltaY, -100f, 100f);
+
+        if (Math.Abs(deltaX) < float.Epsilon)
         {
-            // above 0
-            if (_thrustVec.X > float.Epsilon)
-            {
-                // going under 0, through dead zone
-                if (_thrustVec.X - DockyardToolsPlugin.ControlSensitivity.Value < OutputDeadzone)
-                {
-                    _thrustVec.X = 0f;
-                }
-                else
-                {
-                    _thrustVec.X -= DockyardToolsPlugin.ControlSensitivity.Value;
-                }
-            }
-            // under 0
-            else if (_thrustVec.X < -float.Epsilon)
-            {
-                // going over 0, through dead zone
-                if (_thrustVec.X + DockyardToolsPlugin.ControlSensitivity.Value > -OutputDeadzone)
-                {
-                    _thrustVec.X = 0f;
-                }
-                else
-                {
-                    _thrustVec.X += DockyardToolsPlugin.ControlSensitivity.Value;
-                }
-            }
-            else
-            {
-                _thrustVec.X = +0f;
-            }
-        }
-        
-        // decay
-        if (!yHit)
-        {
-            // above 0
-            if (_thrustVec.Y > float.Epsilon)
-            {
-                // going under 0, through dead zone
-                if (_thrustVec.Y - DockyardToolsPlugin.ControlSensitivity.Value < OutputDeadzone)
-                {
-                    _thrustVec.Y = 0f;
-                }
-                else
-                {
-                    _thrustVec.Y -= DockyardToolsPlugin.ControlSensitivity.Value;
-                }
-            }
-            // under 0
-            else if (_thrustVec.Y < -float.Epsilon)
-            {
-                // going over 0, through dead zone
-                if (_thrustVec.Y + DockyardToolsPlugin.ControlSensitivity.Value > -OutputDeadzone)
-                {
-                    _thrustVec.Y = 0f;
-                }
-                else
-                {
-                    _thrustVec.Y += DockyardToolsPlugin.ControlSensitivity.Value;
-                }
-            }
-            else
-            {
-                _thrustVec.Y = +0f;
-            }
+            _thrustVec.X = 0f;
         }
 
-        _dockingSignal = DockyardToolsPlugin.ControlToggleDocking.IsHit();
+        if (Math.Abs(deltaY) < float.Epsilon)
+        {
+            _thrustVec.Y = 0f;
+        }
+
+        if (DockyardToolsPlugin.ControlToggleDocking.IsHit())
+            _dockingSignal = true;
     }
     
     

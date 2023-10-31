@@ -39,7 +39,7 @@ public partial class PlayerInputCapture : ItemComponent
     public PlayerInputCapture(Item item, ContentXElement element) : base(item, element)
     {
         _networkHelper = new(this, ReadEventData, WriteEventData);
-        item.isActive = true;
+        isActive = true;
     }
 
     public override void OnMapLoaded()
@@ -88,6 +88,7 @@ public partial class PlayerInputCapture : ItemComponent
         item.SendSignal(_thrustVec.X.FormatToDecimalPlace(1), S_VELX_OUT);
         item.SendSignal(_thrustVec.Y.FormatToDecimalPlace(1), S_VELY_OUT);
         item.SendSignal(_dockingSignal ? "1" : "0", S_DOCKCMD_OUT);
+        _dockingSignal = false; // it's toggle, not set. Send once.
     }
 
     private void ReadEventData(IReadMessage msg)
