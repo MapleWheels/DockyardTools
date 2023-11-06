@@ -23,7 +23,6 @@ public partial class PlayerInputCapture : ItemComponent
     public ref readonly Vector2 ThrustVec => ref _thrustVec;
     private int _ticksUntilWiringUpdate = 0;
     private ImmutableList<Controller> _linkedControllers = ImmutableList<Controller>.Empty;
-    private bool _zeroOutput = false;
 
     [Editable(1f,10f), Serialize(5, IsPropertySaveable.Yes, description: "Ticks between sending network data. For performance.")]
     public int WaitTicksBetweenNetworkUpdate { get; set; }
@@ -56,22 +55,22 @@ public partial class PlayerInputCapture : ItemComponent
     public override void Update(float deltaTime, Camera cam)
     {
 #if CLIENT
+        bool controllerFound = false;
         foreach (Controller controller in _linkedControllers)
         {
             if (controller.User is not null && Character.Controlled is not null && controller.User == Character.Controlled)
             {
-                _zeroOutput = false;
+                controllerFound = true;
                 UpdatePlayerInput();
                 _networkHelper.NetworkUpdateReady();
             }
-            // reset outputs if no one is operating the controller
-            else if (controller.User is null && !_zeroOutput)
-            {
-                _thrustVec = Vector2.Zero;
-                _dockingSignal = false;
-                _zeroOutput = true;
-                _networkHelper.NetworkUpdateReady();
-            }
+        }
+        // reset outputs if no one is operating the controller
+        if (!controllerFound)
+        {
+            _thrustVec = Vector2.Zero;
+            _dockingSignal = false;
+            _networkHelper.NetworkUpdateReady();
         }
 #endif
         _ticksUntilWiringUpdate--;
@@ -95,7 +94,9 @@ public partial class PlayerInputCapture : ItemComponent
     {
         _thrustVec.X = msg.ReadRangedSingle(-100, 100, 12);
         _thrustVec.Y = msg.ReadRangedSingle(-100, 100, 12);
-        _dockingSignal = msg.ReadBoolean();
+        bool dockS = msg.ReadBoolean();
+        if (dockS)
+            _dockingSignal = true;  // we only care if it's true.
     }
 
     private void WriteEventData(IWriteMessage msg)
