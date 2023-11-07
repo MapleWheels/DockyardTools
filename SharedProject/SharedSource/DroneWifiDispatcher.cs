@@ -16,6 +16,7 @@ public partial class DroneWifiDispatcher : ItemComponent
     private const string S_WIFICHANNEL_VELY_OUT = "out_setch6_vely_out";
     private const string S_WIFICHANNEL_DEPTH_OUT = "out_setch7_depth_out";
     private const string S_WIFICHANNEL_BATTCHG_OUT = "out_setch8_battchg_out";
+    private const string S_WIFICHANNEL_TRANSDUCER_OUT = "out_setch9_transducer_out";
     private const string S_TAG_LINKED_PORT = "smartdockingport";
     
     #endregion
@@ -139,5 +140,7 @@ public partial class DroneWifiDispatcher : ItemComponent
         item.SendSignal(ch.ToString(), S_WIFICHANNEL_DEPTH_OUT);
         ch++;
         item.SendSignal(ch.ToString(), S_WIFICHANNEL_BATTCHG_OUT);
+        ch++;
+        item.SendSignal(ch.ToString(), S_WIFICHANNEL_TRANSDUCER_OUT);
     }
 }

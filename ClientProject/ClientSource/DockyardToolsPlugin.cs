@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Barotrauma;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework.Input;
 using ModdingToolkit.Config;
 using ModdingToolkit.Networking;
+using ModdingToolkit.Patches;
 
 namespace DockyardTools
 {
@@ -62,6 +64,17 @@ namespace DockyardTools
                 20f, 4f, 100f, 19, //max value cannot be >= than OutputDeadZone
                 NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
             
+            
+            ModdingToolkit.Patches.PatchManager.RegisterPatch(new PatchManager.PatchData(
+                AccessTools.DeclaredMethod(typeof(Barotrauma.HUD), nameof(HUD.CloseHUD)), 
+                null,
+                new HarmonyMethod(AccessTools.DeclaredMethod(typeof(GUICloseOverride), nameof(GUICloseOverride.Post_CloseHUD)))
+                ));
+        }
+
+        private void DisposeClient()
+        {
+            GUICloseOverride.Dipose();
         }
     }
 }

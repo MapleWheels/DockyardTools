@@ -28,7 +28,9 @@ namespace DockyardTools
 
         public void Dispose()
         {
-            // Cleanup your plugin!
+#if CLIENT
+            DisposeClient();
+#endif
         }
     }
 }

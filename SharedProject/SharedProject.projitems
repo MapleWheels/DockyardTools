@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\DroneWifiDispatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\ESCU.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\ETCU.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\GUICloseBlocker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\MachineStateReader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\PlayerInputCapture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\DockyardToolsPlugin.cs" />
