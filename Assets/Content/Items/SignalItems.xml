@@ -160,7 +160,7 @@
       <output name="out_setch9_transducer_out" displayname="WiCh Transducer Out" />
     </ConnectionPanel>
   </Item>
-  <Item name="" description="Smart Periscope" identifier="smartperiscope" tags="periscope" category="Machine,Weapon" type="Controller" disableitemusagewhenselected="true" scale="0.5" isshootable="true" requireaimtouse="false" requireaimtosecondaryuse="false">
+  <Item name="Sonar Periscope" description="Smart Periscope" identifier="smartperiscope" tags="periscope" category="Machine,Weapon" type="Controller" disableitemusagewhenselected="true" scale="0.5" isshootable="true" requireaimtouse="false" requireaimtosecondaryuse="false">
     <SwappableItem canbebought="false" origin="67,0"/>
     <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.1" sourcerect="2,210,134,203" origin="0.5,0.5" />
     <Controller allowingameediting="false" UserPos="-35.0, -50.0" direction="Right" canbeselected="true" AllowSelectingWhenSelectedByBot="true" AllowSelectingWhenSelectedByOther="false" msg="ItemMsgInteractSelect">

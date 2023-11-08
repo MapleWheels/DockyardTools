@@ -14,6 +14,8 @@ namespace DockyardTools
 {
     public partial class DockyardToolsPlugin : IAssemblyPlugin
     {
+        private Harmony _harmony;
+        
         public static IConfigControl ControlForwardX { get; private set; }
         public static IConfigControl ControlReverseX { get; private set; }
         public static IConfigControl ControlUpY { get; private set; }
@@ -64,17 +66,29 @@ namespace DockyardTools
                 20f, 4f, 100f, 19, //max value cannot be >= than OutputDeadZone
                 NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
             
-            
-            ModdingToolkit.Patches.PatchManager.RegisterPatch(new PatchManager.PatchData(
-                AccessTools.DeclaredMethod(typeof(Barotrauma.HUD), nameof(HUD.CloseHUD)), 
-                null,
-                new HarmonyMethod(AccessTools.DeclaredMethod(typeof(GUICloseOverride), nameof(GUICloseOverride.Post_CloseHUD)))
-                ));
+            Patch();
         }
 
         private void DisposeClient()
         {
             GUICloseOverride.Dipose();
+            UnpatchAll();
+        }
+
+        private void Patch()
+        {
+            _harmony ??= new Harmony(nameof(DockyardTools));
+            _harmony.Patch(AccessTools.DeclaredMethod(typeof(Barotrauma.HUD), nameof(HUD.CloseHUD)),
+                null,
+                new HarmonyMethod(AccessTools.DeclaredMethod(
+                    typeof(GUICloseOverride),
+                    nameof(GUICloseOverride.Post_CloseHUD))
+                ));
+        }
+
+        private void UnpatchAll()
+        {
+            _harmony?.UnpatchAll();
         }
     }
 }
