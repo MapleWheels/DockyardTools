@@ -62,7 +62,7 @@ public class SimpleSynchroHelper<T> where T : ItemComponent, IClientSerializable
 #endif  
     }
 
-    public virtual void NetworkUpdate()
+    public virtual void ImmediateNetworkUpdate()
     {
         if (!_unsentChanges)
             return;

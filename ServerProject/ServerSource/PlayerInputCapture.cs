@@ -13,6 +13,7 @@ public partial class PlayerInputCapture : IServerSerializable, IClientSerializab
     public void ServerEventRead(IReadMessage msg, Client c)
     {
         _networkHelper.ReadData(msg);
-        _networkHelper.SendUpdateNextTick();
+        _networkHelper.NetworkUpdateReady();
+        _networkHelper.ImmediateNetworkUpdate();
     }
 }

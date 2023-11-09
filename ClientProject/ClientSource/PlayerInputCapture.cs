@@ -44,7 +44,13 @@ public partial class PlayerInputCapture : IClientSerializable, IServerSerializab
         }
 
         if (DockyardToolsPlugin.ControlToggleDocking.IsHit())
-            _dockingSignal = true;
+        {
+            _dockingSignalNetworked = true;
+            if (GameMain.IsSingleplayer)
+            {
+                _dockingSignalLocal = true; // This will be set by the server in MP on this client on a return message.
+            }
+        }    
     }
     
     

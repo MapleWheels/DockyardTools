@@ -19,20 +19,12 @@ public partial class PlayerInputCapture : ItemComponent
 
     private readonly SimpleSynchroHelper<PlayerInputCapture> _networkHelper;
     private Vector2 _thrustVec;
-    private bool _dockingSignal;
+    private bool _dockingSignalNetworked;
+    private bool _dockingSignalLocal;
     public ref readonly Vector2 ThrustVec => ref _thrustVec;
     private int _ticksUntilWiringUpdate = 0;
     private ImmutableList<Controller> _linkedControllers = ImmutableList<Controller>.Empty;
 
-    [Editable(1f,10f), Serialize(5, IsPropertySaveable.Yes, description: "Ticks between sending network data. For performance.")]
-    public int WaitTicksBetweenNetworkUpdate { get; set; }
-    
-    [Editable(1,10), Serialize(3, IsPropertySaveable.Yes, description: "Ticks between wiring updates. For performance.")]
-    public int WaitTicksBetweenWiringUpdate { get; set; }
-
-    [Editable(2f, 99f), Serialize(3, IsPropertySaveable.Yes, description: "Deadzone for value output.")]
-    public int OutputDeadzone { get; set; }
-    
     #endregion
 
     public PlayerInputCapture(Item item, ContentXElement element) : base(item, element)
@@ -44,7 +36,7 @@ public partial class PlayerInputCapture : ItemComponent
     public override void OnMapLoaded()
     {
         base.OnMapLoaded();
-        _networkHelper.TicksBetweenUpdates = WaitTicksBetweenNetworkUpdate;
+        _networkHelper.TicksBetweenUpdates = 1;
         _linkedControllers = item.linkedTo
             .Where(me => me is Item { } it
                          && it.GetComponent<Controller>() is not null)
@@ -69,25 +61,23 @@ public partial class PlayerInputCapture : ItemComponent
         if (!controllerFound)
         {
             _thrustVec = Vector2.Zero;
-            _dockingSignal = false;
+            _dockingSignalNetworked = false;
             _networkHelper.NetworkUpdateReady();
         }
 #endif
-        _ticksUntilWiringUpdate--;
-        if (_ticksUntilWiringUpdate < 0)
-        {
-            _ticksUntilWiringUpdate = WaitTicksBetweenWiringUpdate;
-            UpdateWiring();
-        }
-        _networkHelper.DelayedNetworkUpdate();
+        UpdateWiring();
+        _networkHelper.ImmediateNetworkUpdate();
     }
 
     private void UpdateWiring()
     {
         item.SendSignal(_thrustVec.X.FormatToDecimalPlace(1), S_VELX_OUT);
         item.SendSignal(_thrustVec.Y.FormatToDecimalPlace(1), S_VELY_OUT);
-        item.SendSignal(_dockingSignal ? "1" : "0", S_DOCKCMD_OUT);
-        _dockingSignal = false; // it's toggle, not set. Send once.
+        if (_dockingSignalLocal)
+        {
+            item.SendSignal("1", S_DOCKCMD_OUT);
+            _dockingSignalLocal = false;
+        }
     }
 
     private void ReadEventData(IReadMessage msg)
@@ -96,13 +86,19 @@ public partial class PlayerInputCapture : ItemComponent
         _thrustVec.Y = msg.ReadRangedSingle(-100, 100, 12);
         bool dockS = msg.ReadBoolean();
         if (dockS)
-            _dockingSignal = true;  // we only care if it's true.
+        {
+#if SERVER
+            _dockingSignalNetworked = true;  // tracked for sending to other clients
+#endif
+            _dockingSignalLocal = true;
+        }    
     }
 
     private void WriteEventData(IWriteMessage msg)
     {
         msg.WriteRangedSingle(_thrustVec.X, -100, 100, 12);
         msg.WriteRangedSingle(_thrustVec.Y, -100, 100, 12);
-        msg.WriteBoolean(_dockingSignal);
+        msg.WriteBoolean(_dockingSignalNetworked);  
+        _dockingSignalNetworked = false; // signal sent
     }
 }
