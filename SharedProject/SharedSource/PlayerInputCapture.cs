@@ -21,6 +21,7 @@ public partial class PlayerInputCapture : ItemComponent
     private Vector2 _thrustVec;
     private bool _dockingSignalNetworked;
     private bool _dockingSignalLocal;
+    private bool _isAuthority;
     public ref readonly Vector2 ThrustVec => ref _thrustVec;
     private int _ticksUntilWiringUpdate = 0;
     private ImmutableList<Controller> _linkedControllers = ImmutableList<Controller>.Empty;
@@ -31,6 +32,7 @@ public partial class PlayerInputCapture : ItemComponent
     {
         _networkHelper = new(this, ReadEventData, WriteEventData);
         isActive = true;
+        _isAuthority = false;
     }
 
     public override void OnMapLoaded()
@@ -48,25 +50,37 @@ public partial class PlayerInputCapture : ItemComponent
     {
 #if CLIENT
         bool controllerFound = false;
+        bool anyControllerFound = false;
         foreach (Controller controller in _linkedControllers)
         {
             if (controller.User is not null && Character.Controlled is not null && controller.User == Character.Controlled)
             {
+                _isAuthority = true;
                 controllerFound = true;
                 UpdatePlayerInput();
                 _networkHelper.NetworkUpdateReady();
+            }
+            if (controller.User is not null)
+            {
+                anyControllerFound = true;
             }
         }
         // reset outputs if no one is operating the controller
         if (!controllerFound)
         {
+            _isAuthority = false;
             _thrustVec = Vector2.Zero;
             _dockingSignalNetworked = false;
-            _networkHelper.NetworkUpdateReady();
+            // Someone is controlling this drone but it's not us so we shouldn't override their inputs to the server.
+            if (!anyControllerFound)
+            {
+                _networkHelper.NetworkUpdateReady();
+            }
         }
+        
+        _networkHelper.ImmediateNetworkUpdate();   
 #endif
         UpdateWiring();
-        _networkHelper.ImmediateNetworkUpdate();
     }
 
     private void UpdateWiring()
@@ -82,6 +96,16 @@ public partial class PlayerInputCapture : ItemComponent
 
     private void ReadEventData(IReadMessage msg)
     {
+        if (_isAuthority)
+        {
+            // read to blank because we are in control and don't want lerp-ness caused by server overwriting newer inputs
+            // this could cause desync but the other option is worse.
+            msg.ReadRangedSingle(-100, 100, 12);
+            msg.ReadRangedSingle(-100, 100, 12);
+            msg.ReadBoolean();
+            return;
+        }
+        
         _thrustVec.X = msg.ReadRangedSingle(-100, 100, 12);
         _thrustVec.Y = msg.ReadRangedSingle(-100, 100, 12);
         bool dockS = msg.ReadBoolean();

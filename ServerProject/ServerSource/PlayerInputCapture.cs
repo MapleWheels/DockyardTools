@@ -14,6 +14,6 @@ public partial class PlayerInputCapture : IServerSerializable, IClientSerializab
     {
         _networkHelper.ReadData(msg);
         _networkHelper.NetworkUpdateReady();
-        _networkHelper.ImmediateNetworkUpdate();
+        _networkHelper.ImmediateNetworkUpdate();    // send updates immediately
     }
 }
