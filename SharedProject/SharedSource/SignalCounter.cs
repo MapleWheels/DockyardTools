@@ -48,7 +48,9 @@ public class SignalCounter : ItemComponent, IClientSerializable, IServerSerializ
             if (_counterVal >= NumberOfActiveOutputs)
                 _counterVal = 0;
             _remainingSwitchTime = SwitchTime;
-            SendNetworkUpdateEvent();
+#if SERVER
+            SendNetworkUpdateEvent();   // only server can sync clients or we count twice
+#endif
             SendSignalUpdates();
         }
     }
