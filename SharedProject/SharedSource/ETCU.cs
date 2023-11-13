@@ -140,19 +140,30 @@ public partial class ETCU : Powered, IClientSerializable, IServerSerializable
         base.OnMapLoaded();
 
         _subHulls = Hull.HullList.Where(h => h.Submarine.Equals(item.Submarine)).ToImmutableList();
-        _trimTankHulls = item.linkedTo
+        _trimTankHulls = Item.linkedTo
             .Where(me => me is Hull h 
                          && h.Submarine.Equals(item.Submarine) 
                          && !h.roomName.ToLowerInvariant().Trim().Contains(S_TRIMTANKHULLNAME))
             .Concat(_subHulls.Where(h => h.roomName.Contains(S_TRIMTANKHULLNAME)))
             .Select(me => (Hull)me).ToImmutableList();
 
-        _navSteering = item.linkedTo
+        _navSteering = Item.linkedTo
             .Where(me => me is Item it
                          && it.GetComponent<Steering>() is { }
                          && it.HasTag("navterminal"))
             .Select(me => ((Item)me).GetComponent<Steering>())
+            .Union(
+                Item.Connections
+                    .Where(c => c.Name == S_CMDVELX)
+                    .SelectMany(c => c.Wires
+                        .Where(w => w.OtherConnection(c) is not null)
+                        .Select(w => w.OtherConnection(c))
+                        .Where(c1 => c1.Item.GetComponent<Steering>() is { })
+                        .Select(c1 => c1.Item.GetComponent<Steering>()))
+                )
             .ToImmutableList();
+
+        ModUtils.Logging.PrintMessage($"DockTools: Found Steering components: {_navSteering.Count}");
 
         _totalHullVolume = 0f;
         foreach (Hull hull in _subHulls)
