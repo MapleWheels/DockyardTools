@@ -46,13 +46,13 @@ public partial class VerticalEngine : Engine
             {
                 forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
             }
-            currForce *= item.StatManager.GetAdjustedValue(ItemTalentStats.EngineMaxSpeed, MaxForce) * forceMultiplier;
+            currForce *= item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.EngineMaxSpeed, MaxForce) * forceMultiplier;
             if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
             {
                 currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
             }
 
-            currForce = item.StatManager.GetAdjustedValue(ItemTalentStats.EngineSpeed, currForce);
+            currForce = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.EngineSpeed, currForce);
 
             //less effective when in a bad condition
             currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
