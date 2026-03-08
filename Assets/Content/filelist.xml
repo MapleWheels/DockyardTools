@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="DockyardTools" modversion="1.9" corepackage="False" steamworkshopid="3067143353" gameversion="1.1.19.3">
+  <Item file="%ModDir%/Items/VerticalEngines.xml" />
+  <Item file="%ModDir%/Items/SignalItems.xml" />
+  <Item file="%ModDir%/Items/ContainerItems.xml" />
+  <Text file="%ModDir%/Texts/English.xml"/>
+</contentpackage>

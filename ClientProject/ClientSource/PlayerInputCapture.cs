@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework.Input;
-using ModdingToolkit.Config;
-using ModdingToolkit.Networking;
 
 namespace DockyardTools;
 
@@ -12,22 +10,22 @@ public partial class PlayerInputCapture : IClientSerializable, IServerSerializab
         float deltaX = 0f, deltaY = 0f;
         if (DockyardToolsPlugin.ControlForwardX.Value?.IsDown() ?? false)
         {
-            deltaX += DockyardToolsPlugin.ControlSensitivity.Value;
+            deltaX += DockyardToolsPlugin.InputSensitivity.Value;
         }
 
         if (DockyardToolsPlugin.ControlReverseX.Value?.IsDown() ?? false)
         {
-            deltaX -= DockyardToolsPlugin.ControlSensitivity.Value;
+            deltaX -= DockyardToolsPlugin.InputSensitivity.Value;
         }
         
         if (DockyardToolsPlugin.ControlUpY.Value?.IsDown() ?? false)
         {
-            deltaY -= DockyardToolsPlugin.ControlSensitivity.Value;   // y is inverted
+            deltaY -= DockyardToolsPlugin.InputSensitivity.Value;   // y is inverted
         }
 
         if (DockyardToolsPlugin.ControlDownY.Value?.IsDown() ?? false)
         {
-            deltaY += DockyardToolsPlugin.ControlSensitivity.Value;   // y is inverted
+            deltaY += DockyardToolsPlugin.InputSensitivity.Value;   // y is inverted
         }
 
         _thrustVec.X = Math.Clamp(_thrustVec.X + deltaX, -100f, 100f);

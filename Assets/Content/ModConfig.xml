@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModConfig>
+    <Assembly File="%ModDir%/bin/Server/Linux/DockyardTools.dll" Platform="Linux" Target="Server"/>
+    <Assembly File="%ModDir%/bin/Server/OSX/DockyardTools.dll" Platform="OSX" Target="Server"/>
+    <Assembly File="%ModDir%/bin/Server/Windows/DockyardTools.dll" Platform="Windows" Target="Server"/>
+    <Assembly File="%ModDir%/bin/Client/Linux/DockyardTools.dll" Platform="Linux" Target="Client"/>
+    <Assembly File="%ModDir%/bin/Client/OSX/DockyardTools.dll" Platform="OSX" Target="Client"/>
+    <Assembly File="%ModDir%/bin/Client/Windows/DockyardTools.dll" Platform="Windows" Target="Client"/>
+    <Config File="%ModDir%/Settings.xml" Target="Client"/>
+</ModConfig>

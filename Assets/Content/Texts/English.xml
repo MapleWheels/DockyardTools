@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="English" nowhitespace="false" translatedname="English">
+    <DockyardTools.ControlForwardX.DisplayName>Vehicle Forward (Right)</DockyardTools.ControlForwardX.DisplayName>
+    <DockyardTools.ControlReverseX.DisplayName>Vehicle Reverse (Left)</DockyardTools.ControlReverseX.DisplayName>
+    <DockyardTools.ControlUpY.DisplayName>Vehicle Ascend (Up)</DockyardTools.ControlUpY.DisplayName>
+    <DockyardTools.ControlDownY.DisplayName>Vehicle Descend (Down)</DockyardTools.ControlDownY.DisplayName>
+    <DockyardTools.ControlToggleDocking.DisplayName>Toggle Docking</DockyardTools.ControlToggleDocking.DisplayName>
+    <DockyardTools.InputSensitivity.DisplayName>Input Ramping Sensitivity</DockyardTools.InputSensitivity.DisplayName>
+    <DockyardTools.InputSensitivity.Tooltip>When you press a movement control, how fast the value goes from starting value to 100, in amount added per tick.%</DockyardTools.InputSensitivity.Tooltip>
+
+    <DockyardTools.ControlForwardX.DisplayCategory>Controls</DockyardTools.ControlForwardX.DisplayCategory>
+    <DockyardTools.ControlReverseX.DisplayCategory>Controls</DockyardTools.ControlReverseX.DisplayCategory>
+    <DockyardTools.ControlUpY.DisplayCategory>Controls</DockyardTools.ControlUpY.DisplayCategory>
+    <DockyardTools.ControlDownY.DisplayCategory>Controls</DockyardTools.ControlDownY.DisplayCategory>
+    <DockyardTools.InputSensitivity.DisplayCategory>Controls</DockyardTools.InputSensitivity.DisplayCategory>
+</infotexts>

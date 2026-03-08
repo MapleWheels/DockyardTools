@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using ModdingToolkit.Config;
-using ModdingToolkit.Networking;
 
 namespace DockyardTools;
 

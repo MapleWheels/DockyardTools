@@ -11,9 +11,9 @@ global using Barotrauma;
 global using Barotrauma.Extensions;
 global using HarmonyLib;
 global using Microsoft.Xna.Framework;
-global using ModdingToolkit;
 
 [assembly: IgnoresAccessChecksTo("Barotrauma")]
+[assembly: IgnoresAccessChecksTo("BarotraumaCore")]
 [assembly: IgnoresAccessChecksTo("DedicatedServer")]
 
 namespace DockyardTools;

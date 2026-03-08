@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+    <Settings>
+        <Setting Name="ControlForwardX" Type="control" Value="Right"/>
+        <Setting Name="ControlReverseX" Type="control" Value="Left"/>
+        <Setting Name="ControlUpY" Type="control" Value="Up"/>
+        <Setting Name="ControlDownY" Type="control" Value="Down"/>
+        <Setting Name="ControlToggleDocking" Type="control" Value="Z"/>
+        <Setting Name="InputSensitivity" Type="rangeFloat" Value="20" Min="4" Max="100" Steps="21"/>
+    </Settings>
+</Configuration>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 using Barotrauma;
+using Barotrauma.LuaCs;
 
 namespace DockyardTools
 {

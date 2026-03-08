@@ -5,10 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Barotrauma;
 using Barotrauma.Items.Components;
+using Barotrauma.LuaCs;
+using Barotrauma.LuaCs.Data;
 using Microsoft.Xna.Framework.Input;
-using ModdingToolkit.Config;
-using ModdingToolkit.Networking;
-using ModdingToolkit.Patches;
 
 namespace DockyardTools
 {
@@ -16,55 +15,31 @@ namespace DockyardTools
     {
         private Harmony _harmony;
         
-        public static IConfigControl ControlForwardX { get; private set; }
-        public static IConfigControl ControlReverseX { get; private set; }
-        public static IConfigControl ControlUpY { get; private set; }
-        public static IConfigControl ControlDownY { get; private set; }
-        public static IConfigRangeFloat ControlSensitivity { get; private set; }
-        public static IConfigControl ControlToggleDocking { get; private set; }
+        public static ISettingControl ControlForwardX { get; private set; }
+        public static ISettingControl ControlReverseX { get; private set; }
+        public static ISettingControl ControlUpY { get; private set; }
+        public static ISettingControl ControlDownY { get; private set; }
+        public static ISettingRangeBase<float> InputSensitivity { get; private set; }
+        public static ISettingControl ControlToggleDocking { get; private set; }
 
+        //Injected
+        public IConfigService ConfigService;
+        public readonly ContentPackage OwnerPackage;
+        
+        public DockyardToolsPlugin()
+        {
+            OwnerPackage = ContentPackageManager.EnabledPackages.All.First(p =>
+                p.Name.ToLowerInvariant().Trim().Contains("dockyardtools"));
+        }
+        
         private void PostLoadClient()
         {
-            ControlForwardX = ConfigManager.AddConfigKeyOrMouseBind(
-                "Vehicle-Forward",
-                nameof(DockyardTools), Keys.Right,
-                displayData: new DisplayData(
-                    "Vehicle-Forward", nameof(DockyardTools), "Vehicle-Forward", nameof(DockyardTools))
-            );
-        
-            ControlReverseX = ConfigManager.AddConfigKeyOrMouseBind(
-                "Vehicle-Reverse",
-                nameof(DockyardTools), Keys.Left,
-                displayData: new DisplayData(
-                    "Vehicle-Reverse", nameof(DockyardTools), "Vehicle-Reverse", nameof(DockyardTools))
-            );
-        
-            ControlUpY = ConfigManager.AddConfigKeyOrMouseBind(
-                "Vehicle-Up",
-                nameof(DockyardTools), Keys.Up,
-                displayData: new DisplayData(
-                    "Vehicle-Up", nameof(DockyardTools), "Vehicle-Up", nameof(DockyardTools))
-            );
-        
-            ControlDownY = ConfigManager.AddConfigKeyOrMouseBind(
-                "Vehicle-Down",
-                nameof(DockyardTools), Keys.Down,
-                displayData: new DisplayData(
-                    "Vehicle-Down", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
-            );
-
-            ControlToggleDocking = ConfigManager.AddConfigKeyOrMouseBind(
-                "Vehicle-ToggleDocking",
-                nameof(DockyardTools), Keys.Z,
-                displayData: new DisplayData(
-                    "Vehicle-ToggleDocking", nameof(DockyardTools), "Vehicle-Down", nameof(DockyardTools))
-            );
-            
-            ControlSensitivity = ConfigManager.AddConfigRangeFloat(
-                "Vehicle-ControlSensitity",
-                nameof(DockyardTools),
-                20f, 4f, 100f, 19, //max value cannot be >= than OutputDeadZone
-                NetworkSync.NoSync, f => f is > float.Epsilon and < float.MaxValue);
+            ControlForwardX = ConfigService.TryGetConfig<ISettingControl>(OwnerPackage, nameof(ControlForwardX), out var t1) ? t1 : null;
+            ControlReverseX = ConfigService.TryGetConfig<ISettingControl>(OwnerPackage, nameof(ControlReverseX), out var t2) ? t2 : null;
+            ControlUpY = ConfigService.TryGetConfig<ISettingControl>(OwnerPackage, nameof(ControlUpY), out var t3) ? t3: null;
+            ControlDownY = ConfigService.TryGetConfig<ISettingControl>(OwnerPackage, nameof(ControlDownY), out var t4) ? t4 : null;
+            ControlToggleDocking = ConfigService.TryGetConfig<ISettingControl>(OwnerPackage, nameof(ControlToggleDocking), out var t5) ? t5 : null;
+            InputSensitivity = ConfigService.TryGetConfig<ISettingRangeBase<float>>(OwnerPackage, nameof(InputSensitivity), out var t6) ? t6 : null;
             
             Patch();
         }
@@ -88,7 +63,7 @@ namespace DockyardTools
 
         private void UnpatchAll()
         {
-            _harmony?.UnpatchAll();
+            _harmony?.UnpatchSelf();
         }
     }
 }

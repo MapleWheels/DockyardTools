@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Barotrauma.Items.Components;
+using Barotrauma.LuaCs;
 
 namespace DockyardTools;
 
@@ -34,10 +35,10 @@ public partial class DroneWifiDispatcher : ItemComponent
     public override void OnMapLoaded()
     {
         if (item.linkedTo
-                .FirstOrDefault(me => me is Item it && it.GetComponent<DockingPort>() is not null, null) is not Item dockPortItem
+                .FirstOrDefault(me => me is Item it && it.GetComponent<DockingPort>() is not null, null) is not Item dockPortItem 
             || !dockPortItem.HasTag(S_TAG_LINKED_PORT))
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, smartdockingport tag not found!");
+            LuaCsSetup.Instance.Logger.LogError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, smartdockingport tag not found!");
             IsActive = false;
             return;
         }

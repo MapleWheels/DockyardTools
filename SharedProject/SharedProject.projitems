@@ -9,8 +9,8 @@
     <Import_RootNamespace>SharedProject</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\AssemblySettings.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\DoorController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\*.cs" />
+    <!--<Compile Include="$(MSBuildThisFileDirectory)SharedSource\DoorController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\DroneWifiDispatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\ESCU.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\ETCU.cs" />
@@ -21,6 +21,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\SignalCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\SimpleSynchroHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedSource\Utils.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\VerticalEngine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedSource\VerticalEngine.cs" />-->
   </ItemGroup>
 </Project>
