@@ -23,7 +23,7 @@ namespace DockyardTools
         public static ISettingControl ControlToggleDocking { get; private set; }
 
         //Injected
-        public IConfigService ConfigService;
+        public IConfigService ConfigService { get; set; }
         public readonly ContentPackage OwnerPackage;
         
         public DockyardToolsPlugin()
