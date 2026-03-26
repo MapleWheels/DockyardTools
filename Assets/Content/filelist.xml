@@ -3,5 +3,6 @@
   <Item file="%ModDir%/Items/VerticalEngines.xml" />
   <Item file="%ModDir%/Items/SignalItems.xml" />
   <Item file="%ModDir%/Items/ContainerItems.xml" />
+  <Item file="%ModDir%/Items/UtilityItems.xml" />
   <Text file="%ModDir%/Texts/English.xml"/>
 </contentpackage>
