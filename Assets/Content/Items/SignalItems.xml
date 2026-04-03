@@ -170,7 +170,7 @@
     </Controller>
     <GUICloseBlocker />
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" allowuioverlap="true" hudlayer="-2">
-      <GuiFrame relativesize="0.48,0.52" anchor="Center" relativeoffset="-0.2,-0.38" draggable="true" />
+      <GuiFrame relativesize="0.27,0.29" anchor="Center" relativeoffset="-0.27,-0.43" draggable="true" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="1000.0" />
       <StatusEffect type="OnUse">
