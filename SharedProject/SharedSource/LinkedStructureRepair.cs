@@ -77,7 +77,7 @@ namespace DockyardTools
         return;
       }
       
-      item.SendSignal((HealRate * 100f * Math.Clamp(Voltage, 0f, 2f)).ToString("F0") + "%/s", S_CURRENT_HEAL_RATE_PERCENT);
+      item.SendSignal((HealRate * 100f * Math.Clamp(Voltage, 0f, 2f)).ToString("F2") + "%/s", S_CURRENT_HEAL_RATE_PERCENT);
       
       _intervalTimeRemaining -= deltaTime;
       if (_intervalTimeRemaining <= 0)
