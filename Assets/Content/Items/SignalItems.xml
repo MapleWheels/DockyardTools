@@ -38,6 +38,8 @@
       <output name="VelXOut" displayname="Velocity_X Out" />
       <output name="VelYOut" displayname="Velocity_Y Out" />
       <output name="DockSignalOut" displayname="Docking Signal Out" />
+      <output name="ExtraAttackOut" displayname="Extra Attack Signal Out" />
+      <output name="UtilityOut" displayname="Utility Signal Out" />
     </ConnectionPanel>
   </Item>
   <Item name="ESCU" identifier="elecsyscontroller" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8" cargocontaineridentifier="metalcrate" description="" scale="0.5" 
@@ -170,7 +172,7 @@
     </Controller>
     <GUICloseBlocker />
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" allowuioverlap="true" hudlayer="-2">
-      <GuiFrame relativesize="0.27,0.29" anchor="Center" relativeoffset="-0.27,-0.43" draggable="true" />
+      <GuiFrame relativesize="0.3,0.29" anchor="CenterLeft" relativeoffset="0.01,-0.30" draggable="true" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="1000.0" />
       <StatusEffect type="OnUse">
@@ -195,6 +197,12 @@
       <icon identifier="mineral" texture="Content/UI/MainIconsAtlas.png" sourcerect="336,434,7,12" origin="0.5,0.5"/>
       <icon identifier="" texture="Content/UI/MainIconsAtlas.png" sourcerect="346,416,4,4" origin="0.5,0.5"/>
     </Sonar>
+    <CustomInterface canbeselected="true" allowuioverlap="true">
+      <GuiFrame relativesize="0.11,0.16" anchor="CenterLeft" pivot="TopLeft" relativeoffset="0.01,-0.15" style="ItemUI" />
+      <Button text="Signal out #1" connection="signal_out1" />
+      <Button text="Signal out #2" connection="signal_out2" />
+      <Button text="Signal out #3" connection="signal_out3" />
+    </CustomInterface>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem items="screwdriver" type="Equipped" />
@@ -202,6 +210,9 @@
       <input name="transducer_in" displayname="connection.sonartransducerin" />
       <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim" />
       <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+      <output name="signal_out3" displayname="connection.signaloutx~[num]=3" />
     </ConnectionPanel>
     <!-- Controller output was made editable in v1.1.4.0, disallow it on periscopes -->
     <Upgrade gameversion="1.1.4.0" allowingameediting="false" />

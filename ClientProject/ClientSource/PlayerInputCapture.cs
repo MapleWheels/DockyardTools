@@ -43,12 +43,27 @@ public partial class PlayerInputCapture : IClientSerializable, IServerSerializab
 
         if (DockyardToolsPlugin.ControlToggleDocking.IsHit())
         {
-            _dockingSignalNetworked = true;
+            SetFlag(true, ref _dockingSignalLocal, ref _dockingSignalNetworked);
+        }
+        
+        if (DockyardToolsPlugin.ControlExtraAttack.IsHit())
+        {
+            SetFlag(true, ref _extraAttackSignalLocal, ref _extraAttackSignalNetworked);
+        }
+        
+        if (DockyardToolsPlugin.ControlUtility.IsHit())
+        {
+            SetFlag(true, ref _utilitySignalLocal, ref _utilitySignalNetworked);
+        }
+
+        void SetFlag(bool value, ref bool varLocal, ref bool varNetworked)
+        {
+            varNetworked = value;
             if (GameMain.IsSingleplayer)
             {
-                _dockingSignalLocal = true; // This will be set by the server in MP on this client on a return message.
+                varLocal = value;
             }
-        }    
+        }
     }
     
     

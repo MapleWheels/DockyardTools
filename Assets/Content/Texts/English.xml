@@ -5,6 +5,8 @@
     <DockyardTools.ControlUpY.DisplayName>Vehicle Ascend (Up)</DockyardTools.ControlUpY.DisplayName>
     <DockyardTools.ControlDownY.DisplayName>Vehicle Descend (Down)</DockyardTools.ControlDownY.DisplayName>
     <DockyardTools.ControlToggleDocking.DisplayName>Toggle Docking</DockyardTools.ControlToggleDocking.DisplayName>
+    <DockyardTools.ControlExtraAttack.DisplayName>Secondary Attack</DockyardTools.ControlExtraAttack.DisplayName>
+    <DockyardTools.ControlUtility.DisplayName>Utility Function</DockyardTools.ControlUtility.DisplayName>
     <DockyardTools.InputSensitivity.DisplayName>Input Ramping Sensitivity</DockyardTools.InputSensitivity.DisplayName>
     <DockyardTools.InputSensitivity.Tooltip>When you press a movement control, how fast the value goes from starting value to 100, in amount added per tick.%</DockyardTools.InputSensitivity.Tooltip>
 
@@ -12,5 +14,8 @@
     <DockyardTools.ControlReverseX.DisplayCategory>Controls</DockyardTools.ControlReverseX.DisplayCategory>
     <DockyardTools.ControlUpY.DisplayCategory>Controls</DockyardTools.ControlUpY.DisplayCategory>
     <DockyardTools.ControlDownY.DisplayCategory>Controls</DockyardTools.ControlDownY.DisplayCategory>
+    <DockyardTools.ControlToggleDocking.DisplayCategory>Controls</DockyardTools.ControlToggleDocking.DisplayCategory>
+    <DockyardTools.ControlExtraAttack.DisplayCategory>Controls</DockyardTools.ControlExtraAttack.DisplayCategory>
+    <DockyardTools.ControlUtility.DisplayCategory>Controls</DockyardTools.ControlUtility.DisplayCategory>
     <DockyardTools.InputSensitivity.DisplayCategory>Controls</DockyardTools.InputSensitivity.DisplayCategory>
 </infotexts>

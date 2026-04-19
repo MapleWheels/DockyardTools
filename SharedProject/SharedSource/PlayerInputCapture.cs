@@ -10,6 +10,8 @@ public partial class PlayerInputCapture : ItemComponent
     public const string S_VELX_OUT = "VelXOut";
     public const string S_VELY_OUT = "VelYOut";
     public const string S_DOCKCMD_OUT = "DockSignalOut";
+    public const string S_EXTRAATTACK_OUT = "ExtraAttackOut";
+    public const string S_UTILITY_OUT = "UtilityOut";
 
     #endregion
     
@@ -17,8 +19,8 @@ public partial class PlayerInputCapture : ItemComponent
 
     private readonly SimpleSynchroHelper<PlayerInputCapture> _networkHelper;
     private Vector2 _thrustVec;
-    private bool _dockingSignalNetworked;
-    private bool _dockingSignalLocal;
+    private bool _dockingSignalNetworked, _extraAttackSignalNetworked, _utilitySignalNetworked;
+    private bool _dockingSignalLocal, _extraAttackSignalLocal, _utilitySignalLocal;
     private bool _isAuthority;
     public ref readonly Vector2 ThrustVec => ref _thrustVec;
     private int _ticksUntilWiringUpdate = 0;
@@ -85,10 +87,17 @@ public partial class PlayerInputCapture : ItemComponent
     {
         item.SendSignal(_thrustVec.X.FormatToDecimalPlace(1), S_VELX_OUT);
         item.SendSignal(_thrustVec.Y.FormatToDecimalPlace(1), S_VELY_OUT);
-        if (_dockingSignalLocal)
+        SendFlagSignalConditional(ref _dockingSignalLocal, S_DOCKCMD_OUT);
+        SendFlagSignalConditional(ref _extraAttackSignalLocal, S_EXTRAATTACK_OUT);
+        SendFlagSignalConditional(ref _utilitySignalLocal, S_UTILITY_OUT);
+
+        void SendFlagSignalConditional(ref bool flag, string connectionName)
         {
-            item.SendSignal("1", S_DOCKCMD_OUT);
-            _dockingSignalLocal = false;
+            if (flag)
+            {
+                item.SendSignal("1", connectionName);
+            }
+            flag = false;
         }
     }
 
@@ -100,27 +109,47 @@ public partial class PlayerInputCapture : ItemComponent
             // this could cause desync but the other option is worse.
             msg.ReadRangedSingle(-100, 100, 12);
             msg.ReadRangedSingle(-100, 100, 12);
-            msg.ReadBoolean();
+            msg.ReadBoolean(); // docksignal
+            msg.ReadBoolean(); // extraattack
+            msg.ReadBoolean(); // utility
             return;
         }
         
         _thrustVec.X = msg.ReadRangedSingle(-100, 100, 12);
         _thrustVec.Y = msg.ReadRangedSingle(-100, 100, 12);
-        bool dockS = msg.ReadBoolean();
-        if (dockS)
+        bool dockSignal = msg.ReadBoolean();
+        bool extraAttackSignal = msg.ReadBoolean();
+        bool utilitySignal = msg.ReadBoolean();
+        
+        SetFlagSynchro(dockSignal, ref _dockingSignalLocal, ref _dockingSignalNetworked);
+        SetFlagSynchro(extraAttackSignal, ref _extraAttackSignalLocal, ref _extraAttackSignalNetworked);
+        SetFlagSynchro(utilitySignal, ref _utilitySignalLocal, ref _utilitySignalNetworked);
+
+        void SetFlagSynchro(bool conditional, ref bool local, ref bool networked)
         {
+            if (conditional)
+            {
 #if SERVER
-            _dockingSignalNetworked = true;  // tracked for sending to other clients
+                networked = true;
 #endif
-            _dockingSignalLocal = true;
-        }    
+                local = true;
+            }
+        }
     }
 
     private void WriteEventData(IWriteMessage msg)
     {
         msg.WriteRangedSingle(_thrustVec.X, -100, 100, 12);
         msg.WriteRangedSingle(_thrustVec.Y, -100, 100, 12);
-        msg.WriteBoolean(_dockingSignalNetworked);  
-        _dockingSignalNetworked = false; // signal sent
+        
+        WriteSynchroFlag(ref _dockingSignalNetworked);
+        WriteSynchroFlag(ref _extraAttackSignalNetworked);
+        WriteSynchroFlag(ref _utilitySignalNetworked);
+
+        void WriteSynchroFlag(ref bool networkFlag)
+        {
+            msg.WriteBoolean(networkFlag);
+            networkFlag = false;
+        }
     }
 }
