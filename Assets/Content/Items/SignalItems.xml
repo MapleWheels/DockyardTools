@@ -171,6 +171,10 @@
       <limbposition limb="RightHand" position="67,-170" />
     </Controller>
     <GUICloseBlocker />
+    <FighterHUD canbeselected="true" allowuioverlap="true">
+      <!-- We draw using GUI.Canvas but use the Item.Selected to control whether to draw at all. -->
+      <GuiFrame relativesize="0.01,0.01" anchor="Center" draggable="false" />
+    </FighterHUD>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" allowuioverlap="true" hudlayer="-2">
       <GuiFrame relativesize="0.3,0.29" anchor="CenterLeft" relativeoffset="0.01,-0.30" draggable="true" />
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
@@ -208,6 +212,10 @@
       <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
       <input name="transducer_in" displayname="connection.sonartransducerin" />
+      <input name="CurrentVelX"/>
+      <input name="CurrentVelY"/>
+      <input name="CurrentPosX"/>
+      <input name="CurrentPosY"/>
       <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim" />
       <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
       <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />

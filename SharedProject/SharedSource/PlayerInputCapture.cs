@@ -23,7 +23,6 @@ public partial class PlayerInputCapture : ItemComponent
     private bool _dockingSignalLocal, _extraAttackSignalLocal, _utilitySignalLocal;
     private bool _isAuthority;
     public ref readonly Vector2 ThrustVec => ref _thrustVec;
-    private int _ticksUntilWiringUpdate = 0;
     private ImmutableList<Controller> _linkedControllers = ImmutableList<Controller>.Empty;
 
     #endregion
