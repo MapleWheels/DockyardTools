@@ -8,11 +8,22 @@ public partial class FighterHUD
 {
   #region SerializedFields
   
-  [Editable(0.1f, 1f, 3), Serialize(0.6f, IsPropertySaveable.Yes, description: "Width of the GUI relative to screen width.")]
+  [Editable(0.1f, 1f, 3), Serialize(0.6f, IsPropertySaveable.No, description: "Width of the GUI relative to screen width.")]
   public float GuiSizeRatioX { get; set; }
   
-  [Editable(0.1f, 1f, 3), Serialize(0.65f, IsPropertySaveable.Yes, description: "Height of the GUI relative to screen height.")]
+  [Editable(0.1f, 1f, 3), Serialize(0.7f, IsPropertySaveable.No, description: "Height of the GUI relative to screen height.")]
   public float GuiSizeRatioY { get; set; }
+  
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the depth gauge.")]
+  public bool RenderDepthGauge { get; set; }
+  
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the speed gauge.")]
+  public bool RenderSpeedGauge { get; set; }
+  
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the primary ammunition counter.")]
+  public bool RenderPrimaryAmmoCounter { get; set; }
+  
+  
   
   #endregion
   
@@ -21,17 +32,24 @@ public partial class FighterHUD
   private Vector2 _screenDrawSize;
   private (Vector2 TopLeft, Vector2 TopRight, Vector2 BottomRight, Vector2 BottomLeft) _screenDrawArea;
   private (Vector2 Top, Vector2 Bottom) _depthBar, _speedBar;
+  private (Vector2 Start, Vector2 End) _depthBarTopNotch, _depthBarBottomNotch, _depthBarMidNotch, 
+    _speedBarTopNotch, _speedBarBottomNotch, _speedBarMidNotch;
+
+  private float _depthNotchPixelSeparation, _speedNotchPixelSeparation;
+  private float _depthNotchPixelsPerUnit, _speedNotchPixelsPerUnit;
   private float _depthBarHeight, _speedBarHeight;
   
   // -- Config
   private const float GAUGE_NOTCH_LINES_WIDTH = 20f;
-  private const float GAUGE_NOTCH_LINES_SEPARATION = 50f;
-  private const float GAUGE_NOTCH_LINES_DEPTH_MULTI = 2.5f;
-  private const float GAUGE_NOTCH_LINES_SPEED_MULTI = 2.5f;
+  private const float GAUGE_NOTCH_DEPTH_LINES_COUNT = 10f;
+  private const float GAUGE_NOTCH_SPEED_LINES_COUNT = 10f;
+  private const float GAUGE_NOTCH_DEPTH_SEPARATION = 20f;
+  private const float GAUGE_NOTCH_SPEED_SEPARATION = 5f;
+  private const float GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH = 10f;
   private readonly Vector2 GAUGE_TEXT_DISPLAY_RECT = new Vector2(80f, 30f);
   private readonly Vector2 _gaugeRelativeOffset = new Vector2(0.0f, 0.5f); 
-  private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-90f, 0f); 
-  private readonly Vector2 _gaugeFixedOffsetSpeed = new Vector2(20f, 0f); 
+  private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-90f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
+  private readonly Vector2 _gaugeFixedOffsetSpeed = new Vector2(20f, -20f) + new Vector2(GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
   private readonly Color _gaugeTextColor = new Color(41,255,62, 255);
   private readonly Color _gaugeLineColor = new Color(41,255,62, 175);
   private readonly Vector2 _barLinesPadding = new Vector2(20f, 10f);
@@ -51,73 +69,144 @@ public partial class FighterHUD
 
     _depthBarHeight = _depthBar.Bottom.Y - _depthBar.Top.Y;
     _speedBarHeight = _speedBar.Bottom.Y - _speedBar.Top.Y;
+
+    float depthBarMidPoint = (_depthBar.Bottom.Y + _depthBar.Top.Y) / 2f;
+    float speedBarMidPoint = (_speedBar.Bottom.Y + _speedBar.Top.Y) / 2f;
+    
+    _depthBarTopNotch.Start = _depthBar.Top;
+    _depthBarTopNotch.End = _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+    _depthBarBottomNotch.Start = _depthBar.Bottom;
+    _depthBarBottomNotch.End = _depthBar.Bottom + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+    _depthBarMidNotch.Start = new Vector2(_depthBar.Top.X - GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, depthBarMidPoint);
+    _depthBarMidNotch.End = new Vector2(_depthBar.Top.X, depthBarMidPoint) + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+
+    _speedBarTopNotch.Start = _speedBar.Top;
+    _speedBarTopNotch.End = _speedBar.Top - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+    _speedBarBottomNotch.Start = _speedBar.Bottom;
+    _speedBarBottomNotch.End = _speedBar.Bottom - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+    _speedBarMidNotch.Start = new Vector2(_speedBar.Top.X + GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, speedBarMidPoint);
+    _speedBarMidNotch.End = new Vector2(_speedBar.Top.X, speedBarMidPoint) - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+
+    _depthNotchPixelSeparation = (_depthBar.Bottom.Y - _depthBar.Top.Y) / GAUGE_NOTCH_DEPTH_LINES_COUNT;
+    _speedNotchPixelSeparation = (_speedBar.Bottom.Y - _speedBar.Top.Y) / GAUGE_NOTCH_SPEED_LINES_COUNT;
+
+    _depthNotchPixelsPerUnit = _depthNotchPixelSeparation / GAUGE_NOTCH_DEPTH_SEPARATION;
+    _speedNotchPixelsPerUnit = _speedNotchPixelSeparation / GAUGE_NOTCH_SPEED_SEPARATION;
     
     _hudDraw = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
       onDraw: (batch, component) =>
       {
-#if DEBUG
-        // draw test
-        GUI.DrawLine(batch, new Vector2(10f, 10f), new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White, 1f);
-        // debug: draw boundary box
-        GUI.DrawLine(batch, _screenDrawArea.TopLeft, _screenDrawArea.TopRight, Color.Magenta, 1f);
-        GUI.DrawLine(batch, _screenDrawArea.BottomLeft, _screenDrawArea.BottomRight, Color.Magenta, 1f);
-#endif
-        
-        // --- Draw Depth Gauge
-        // line 
-        DrawLineWithShadow(batch, _depthBar.Top, _depthBar.Bottom, _gaugeLineColor, width: 3f);
-        // top, bottom notches
-        DrawLineWithShadow(batch, _depthBar.Top, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, 0f), _gaugeLineColor, width: 3f);
-        DrawLineWithShadow(batch, _depthBar.Bottom, _depthBar.Bottom + new Vector2(GAUGE_NOTCH_LINES_WIDTH, 0f), _gaugeLineColor, width: 3f);
-        // tests: in-between
-
-        float vHeightOffset = GAUGE_NOTCH_LINES_SEPARATION - (Math.Abs(_currentPosition.Y * GAUGE_NOTCH_LINES_DEPTH_MULTI) % GAUGE_NOTCH_LINES_SEPARATION);
-        for (float vHeight = vHeightOffset; vHeight + _depthBar.Top.Y < _depthBar.Bottom.Y; vHeight += GAUGE_NOTCH_LINES_SEPARATION)
+        if (RenderDepthGauge)
         {
-          DrawNotchDepthBar(batch, vHeight);
+          DrawDepthGauge();
+        }
+
+        if (RenderSpeedGauge)
+        {
+          DrawSpeedGauge();
         }
         
-        // tests: depth number
-        Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
-        GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
-        
-        // --- Draw Speed Gauge
-        DrawLineWithShadow(batch, _speedBar.Top, _speedBar.Bottom, _gaugeLineColor, width: 3f);
-        // top, bottom notches
-        DrawLineWithShadow(batch, _speedBar.Top, _speedBar.Top - new Vector2(GAUGE_NOTCH_LINES_WIDTH, 0f), _gaugeLineColor, width: 3f);
-        DrawLineWithShadow(batch, _speedBar.Bottom, _speedBar.Bottom - new Vector2(GAUGE_NOTCH_LINES_WIDTH, 0f), _gaugeLineColor, width: 3f);
-        // tests: in-between
-        
-        
-        
-        // tests: speed number
-        Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top + (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
-        float speed = (float)Math.Sqrt(Math.Pow(_currentVelocity.X, 2) + Math.Pow(_currentVelocity.Y, 2));
-        GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("0000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
 
-        float vSpeedOffset = GAUGE_NOTCH_LINES_SEPARATION - (speed * GAUGE_NOTCH_LINES_SPEED_MULTI) % GAUGE_NOTCH_LINES_SEPARATION;
-        for (float vSpeed = vSpeedOffset; vSpeed + _speedBar.Top.Y < _speedBar.Bottom.Y; vSpeed += GAUGE_NOTCH_LINES_SEPARATION)
+        void DrawDepthGauge()
         {
-          DrawNotchSpeedBar(batch, vSpeed);
+          // --- Draw Depth Gauge
+          
+          DrawLineWithShadow(batch, _depthBar.Top, _depthBar.Bottom, _gaugeLineColor, width: 3f);
+          // top, bottom, middle notches
+          DrawLineWithShadow(batch, _depthBarTopNotch.Start, _depthBarTopNotch.End, _gaugeLineColor, width: 3f);
+          DrawLineWithShadow(batch, _depthBarBottomNotch.Start, _depthBarBottomNotch.End, _gaugeLineColor, width: 3f);
+          DrawLineWithShadow(batch, _depthBarMidNotch.Start, _depthBarMidNotch.End, _gaugeLineColor, width: 3f);
+      
+          // in-between moving lines
+          DrawDepthNotches(_currentPosition.Y);
+          
+          // tests: depth number
+          Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
+          GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
         }
+        
+        void DrawDepthNotches(float currentDepth)
+        {
+          float minDisplayableDepth = currentDepth - (depthBarMidPoint - _depthBar.Top.Y) / _depthNotchPixelsPerUnit;
+
+          // this is the lowest value notch that can display
+          float minDepthNotchValue = GAUGE_NOTCH_DEPTH_SEPARATION - (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION) + minDisplayableDepth;
+          float notchOffset = (GAUGE_NOTCH_DEPTH_SEPARATION - (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION)) * _depthNotchPixelsPerUnit;
+          
+          for (int i = 0; i < GAUGE_NOTCH_DEPTH_LINES_COUNT; i++)
+          {
+            float vertOffset = notchOffset + i * _depthNotchPixelSeparation;
+            if (vertOffset + _depthBar.Top.Y > _depthBar.Bottom.Y)
+            {
+              break;
+            }
+            DrawNotchDepthBar(batch, vertOffset, minDepthNotchValue + GAUGE_NOTCH_DEPTH_SEPARATION * i);
+          }
+          
+        }
+        
+        void DrawNotchDepthBar(SpriteBatch spriteBatch, float distanceFromTop, float depthValue)
+        { 
+          DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop), _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
+          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 20f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: GUIStyle.SmallFont);
+        }
+
+        void DrawSpeedGauge()
+        {
+          // --- Draw Speed Gauge
+          DrawLineWithShadow(batch, _speedBar.Top, _speedBar.Bottom, _gaugeLineColor, width: 3f);
+          // top, bottom, middle notches
+          DrawLineWithShadow(batch, _speedBarTopNotch.Start, _speedBarTopNotch.End, _gaugeLineColor, width: 3f);
+          DrawLineWithShadow(batch, _speedBarBottomNotch.Start, _speedBarBottomNotch.End, _gaugeLineColor, width: 3f);
+          DrawLineWithShadow(batch, _speedBarMidNotch.Start, _speedBarMidNotch.End, _gaugeLineColor, width: 3f);
+     
+          // in-between moving lines
+          // tests: speed number
+          float speed = (float)Math.Sqrt(Math.Pow(_currentVelocity.X, 2) + Math.Pow(_currentVelocity.Y, 2));
+
+          DrawSpeedNotches(speed);
+          
+          Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top + (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
+          GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
+        }
+        
+        void DrawSpeedNotches(float currentSpeed)
+        {
+          float minDisplayableSpeed = currentSpeed - (speedBarMidPoint - _speedBar.Top.Y) / _speedNotchPixelsPerUnit;
+
+          // this is the lowest value notch that can display
+          float minSpeedNotchValue = GAUGE_NOTCH_SPEED_SEPARATION - (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION) + minDisplayableSpeed;
+          float notchOffset = (GAUGE_NOTCH_SPEED_SEPARATION - (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION)) * _speedNotchPixelsPerUnit;
+          
+          for (int i = 0; i < GAUGE_NOTCH_SPEED_LINES_COUNT; i++)
+          {
+            float vertOffset = notchOffset + i * _speedNotchPixelSeparation;
+            if (vertOffset + _speedBar.Top.Y > _speedBar.Bottom.Y)
+            {
+              break;
+            }
+            DrawNotchSpeedBar(batch, vertOffset, minSpeedNotchValue + GAUGE_NOTCH_SPEED_SEPARATION * i);
+          }
+          
+        }
+        
+        void DrawNotchSpeedBar(SpriteBatch spriteBatch, float distanceFromTop, float speedValue)
+        { 
+          DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop), _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
+          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 18f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: GUIStyle.SmallFont);
+        }
+
+        
         
       });
 
-    void DrawNotchDepthBar(SpriteBatch spriteBatch, float distanceFromTop)
-    { 
-      DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop), _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 3f);
-    }
     
-    void DrawNotchSpeedBar(SpriteBatch spriteBatch, float distanceFromTop)
-    { 
-      DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop), _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 3f);
-    }
     
     void DrawLineWithShadow(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float depth = 0f,
       float width = 1f)
     {
-      GUI.DrawLine(spriteBatch, start, end, new Color(10, 10, 10, 100), depth+1, width+3);
-      GUI.DrawLine(spriteBatch, start, end, new Color(50, 50, 50, 175), depth+1, width+1);
+      GUI.DrawLine(spriteBatch, start, end, new Color(20, 20, 20, 100), depth+1, width+3);
+      GUI.DrawLine(spriteBatch, start, end, new Color(color.R/2, color.G/2, color.B/2, 175), depth+1, width+1);
       GUI.DrawLine(spriteBatch, start, end, color, depth, width);
     }
     void CalculateDrawArea()
