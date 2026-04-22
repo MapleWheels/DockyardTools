@@ -136,11 +136,12 @@ public partial class FighterHUD
           for (int i = 0; i < GAUGE_NOTCH_DEPTH_LINES_COUNT; i++)
           {
             float vertOffset = notchOffset + i * _depthNotchPixelSeparation;
-            if (vertOffset + _depthBar.Top.Y > _depthBar.Bottom.Y)
+            float notchDepth = minDepthNotchValue + GAUGE_NOTCH_DEPTH_SEPARATION * i;
+            if (vertOffset + _depthBar.Top.Y > _depthBar.Bottom.Y || notchDepth < 0f)
             {
-              break;
+              continue;
             }
-            DrawNotchDepthBar(batch, vertOffset, minDepthNotchValue + GAUGE_NOTCH_DEPTH_SEPARATION * i);
+            DrawNotchDepthBar(batch, vertOffset, notchDepth);
           }
           
         }
@@ -181,11 +182,12 @@ public partial class FighterHUD
           for (int i = 0; i < GAUGE_NOTCH_SPEED_LINES_COUNT; i++)
           {
             float vertOffset = notchOffset + i * _speedNotchPixelSeparation;
-            if (vertOffset + _speedBar.Top.Y > _speedBar.Bottom.Y)
+            float notchSpeed = minSpeedNotchValue + GAUGE_NOTCH_SPEED_SEPARATION * i;
+            if (vertOffset + _speedBar.Top.Y > _speedBar.Bottom.Y || notchSpeed < 0f)
             {
-              break;
+              continue;
             }
-            DrawNotchSpeedBar(batch, vertOffset, minSpeedNotchValue + GAUGE_NOTCH_SPEED_SEPARATION * i);
+            DrawNotchSpeedBar(batch, vertOffset, notchSpeed);
           }
           
         }
