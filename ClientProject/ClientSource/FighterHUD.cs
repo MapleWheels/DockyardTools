@@ -20,9 +20,27 @@ public partial class FighterHUD
   [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the speed gauge.")]
   public bool RenderSpeedGauge { get; set; }
   
+  [Editable, Serialize(200f, IsPropertySaveable.No, "Offset between info display texts and the number values.")]
+  public float InfoTextsHorizontalOffset { get; set; }
+  
   [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the primary ammunition counter.")]
   public bool RenderPrimaryAmmoCounter { get; set; }
   
+  [Editable, Serialize("PRIMARY_AMMO", IsPropertySaveable.No, "Primary Weapon Name.")]
+  public string PrimaryWeaponName { get; set; }
+  
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the secondary ammunition counter.")]
+  public bool RenderSecondaryAmmoCounter { get; set; }
+  
+  [Editable, Serialize("SECONDARY_AMMO", IsPropertySaveable.No, "Secondary Weapon Name.")]
+  public string SecondaryWeaponName { get; set; }
+  
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the hull integrity percentage.")]
+  public bool RenderHullIntegrity { get; set; }
+  
+  [Editable, Serialize("HULL_INTEGRITY", IsPropertySaveable.No, "Hull Integrity Display Text.")]
+  public string HullIntegrityName { get; set; }
+
   
   
   #endregion
@@ -34,10 +52,11 @@ public partial class FighterHUD
   private (Vector2 Top, Vector2 Bottom) _depthBar, _speedBar;
   private (Vector2 Start, Vector2 End) _depthBarTopNotch, _depthBarBottomNotch, _depthBarMidNotch, 
     _speedBarTopNotch, _speedBarBottomNotch, _speedBarMidNotch;
+  private Vector2 _infoTextsValuesOffset;
+  
 
   private float _depthNotchPixelSeparation, _speedNotchPixelSeparation;
   private float _depthNotchPixelsPerUnit, _speedNotchPixelsPerUnit;
-  private float _depthBarHeight, _speedBarHeight;
   
   // -- Config
   private const float GAUGE_NOTCH_LINES_WIDTH = 20f;
@@ -46,14 +65,35 @@ public partial class FighterHUD
   private const float GAUGE_NOTCH_DEPTH_SEPARATION = 20f;
   private const float GAUGE_NOTCH_SPEED_SEPARATION = 5f;
   private const float GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH = 10f;
-  private readonly Vector2 GAUGE_TEXT_DISPLAY_RECT = new Vector2(80f, 30f);
+  private readonly GUIFont _gaugePrimaryNumberFont = GUIStyle.DigitalFont;
+  private readonly GUIFont _gaugeNotchNumberFont = GUIStyle.SmallFont;
   private readonly Vector2 _gaugeRelativeOffset = new Vector2(0.0f, 0.5f); 
   private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-90f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
   private readonly Vector2 _gaugeFixedOffsetSpeed = new Vector2(20f, -20f) + new Vector2(GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
   private readonly Color _gaugeTextColor = new Color(41,255,62, 255);
   private readonly Color _gaugeLineColor = new Color(41,255,62, 175);
   private readonly Vector2 _barLinesPadding = new Vector2(20f, 10f);
+  private readonly Vector2 _infoTextsRenderStartOffset = new Vector2(0f, 15f);
+  private readonly Vector2 _infoTextsRenderSpacing = new Vector2(0f, 35f);
+  private readonly GUIFont _infoTextsDescriptionFont = GUIStyle.Font;
+  private readonly GUIFont _infoTextsValuesFont = GUIStyle.DigitalFont;
+  private readonly Color _infoTextsDescriptionColor = new Color(41,255,62, 255);
+  private readonly Color _infoTextsValueHighColor = new Color(41,255,62, 255);
+  private readonly Color _infoTextsValueLowColor = new Color(255,61,62, 255);
   
+
+  public override void CreateGUI()
+  {
+    base.CreateGUI();
+    CreateHUD();
+  }
+
+  public override void OnItemLoaded()
+  {
+    base.OnItemLoaded();
+    CreateHUD();
+  }
+
   private void CreateHUD()
   {
     GuiFrame.ClearChildren();
@@ -66,9 +106,6 @@ public partial class FighterHUD
     _speedBar = (
       Top: _screenDrawArea.TopRight + new Vector2(-_barLinesPadding.X, _barLinesPadding.Y),
       Bottom: _screenDrawArea.BottomRight + new Vector2(-_barLinesPadding.X, -_barLinesPadding.Y));
-
-    _depthBarHeight = _depthBar.Bottom.Y - _depthBar.Top.Y;
-    _speedBarHeight = _speedBar.Bottom.Y - _speedBar.Top.Y;
 
     float depthBarMidPoint = (_depthBar.Bottom.Y + _depthBar.Top.Y) / 2f;
     float speedBarMidPoint = (_speedBar.Bottom.Y + _speedBar.Top.Y) / 2f;
@@ -92,6 +129,8 @@ public partial class FighterHUD
 
     _depthNotchPixelsPerUnit = _depthNotchPixelSeparation / GAUGE_NOTCH_DEPTH_SEPARATION;
     _speedNotchPixelsPerUnit = _speedNotchPixelSeparation / GAUGE_NOTCH_SPEED_SEPARATION;
+
+    _infoTextsValuesOffset = new Vector2(InfoTextsHorizontalOffset, -5f);
     
     _hudDraw = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
       onDraw: (batch, component) =>
@@ -105,7 +144,32 @@ public partial class FighterHUD
         {
           DrawSpeedGauge();
         }
+
+        Vector2 infoTextsNextRenderPosition = _infoTextsRenderStartOffset + _depthBar.Bottom;
+        Vector2 GetNextInfoTextsPosition()
+        {
+          var curr = infoTextsNextRenderPosition;
+          infoTextsNextRenderPosition += _infoTextsRenderSpacing;
+          return curr;
+        }
         
+        if (RenderPrimaryAmmoCounter)
+        {
+          DrawPrimaryAmmoCounter();
+        }
+
+        if (RenderSecondaryAmmoCounter)
+        {
+          DrawSecondaryAmmoCounter();
+        }
+
+        if (RenderHullIntegrity)
+        {
+          DrawHullHpPercentage();
+        }
+
+
+        #region DEPTH_TAPE
 
         void DrawDepthGauge()
         {
@@ -120,9 +184,9 @@ public partial class FighterHUD
           // in-between moving lines
           DrawDepthTape(_currentPosition.Y);
           
-          // tests: depth number
+          // depth number
           Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
-          GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
+          GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: _gaugePrimaryNumberFont);
         }
         
         void DrawDepthTape(float currentDepth)
@@ -149,8 +213,12 @@ public partial class FighterHUD
         void DrawDepthTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float depthValue)
         { 
           DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop), _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
-          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 20f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: GUIStyle.SmallFont);
+          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 20f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
+
+        #endregion
+
+        #region SPEED_TAPE
 
         void DrawSpeedGauge()
         {
@@ -168,7 +236,7 @@ public partial class FighterHUD
           DrawSpeedTape(speed);
           
           Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top + (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
-          GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
+          GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor, font: _gaugePrimaryNumberFont);
         }
         
         void DrawSpeedTape(float currentSpeed)
@@ -195,9 +263,42 @@ public partial class FighterHUD
         void DrawSpeedTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float speedValue)
         { 
           DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop), _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
-          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 18f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: GUIStyle.SmallFont);
+          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 25f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
+        }
+
+        #endregion
+
+        #region INFO_TEXTS
+
+        void DrawPrimaryAmmoCounter()
+        {
+          //var pos = GetNextInfoTextsPosition();
+          //GUI.DrawString(batch, pos, PrimaryWeaponName, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
+          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo1Percent);
+          //GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{_ammo1Percent.ToString("F1")}%", valueColor, font: _infoTextsValuesFont);
+          DrawInfoText(PrimaryWeaponName, _ammo1Percent, valueColor);
         }
         
+        void DrawSecondaryAmmoCounter()
+        {
+          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo2Percent);
+          DrawInfoText(SecondaryWeaponName, _ammo2Percent, valueColor);
+        }
+        
+        void DrawHullHpPercentage()
+        {
+          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _hullHpPercent);
+          DrawInfoText(HullIntegrityName, _hullHpPercent, valueColor);
+        }
+
+        void DrawInfoText(string infoDescription, float infoValue, Color infoValueColor)
+        {
+          var pos = GetNextInfoTextsPosition();
+          GUI.DrawString(batch, pos, infoDescription, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
+          GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor, font: _infoTextsValuesFont);
+        }
+
+        #endregion
       });
 
     

@@ -216,6 +216,9 @@
       <input name="CurrentVelY"/>
       <input name="CurrentPosX"/>
       <input name="CurrentPosY"/>
+      <input name="Ammunition1In"/>
+      <input name="Ammunition2In"/>
+      <input name="HullHpIn"/>
       <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim" />
       <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
       <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />

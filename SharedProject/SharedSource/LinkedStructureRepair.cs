@@ -6,6 +6,7 @@ namespace DockyardTools
   public class LinkedStructureRepair : Powered, IClientSerializable, IServerSerializable
   {
     private const string S_CURRENT_HEAL_RATE_PERCENT = "CurrentHealRatePercent";
+    private const string S_CURRENT_HULLHP_PERCENT = "CurrentHullHpPercent";
     
     private ImmutableArray<Structure> LinkedStructures { get; set; } 
     private float _intervalTimeRemaining;
@@ -74,6 +75,7 @@ namespace DockyardTools
       if (!_isReady)
       {
         item.SendSignal(S_CURRENT_HEAL_RATE_PERCENT, $"0%/s");
+        item.SendSignal("0", S_CURRENT_HULLHP_PERCENT);
         return;
       }
       
@@ -89,18 +91,27 @@ namespace DockyardTools
 
     public void ApplyHealing()
     {
+      float maxHp = 0;
+      float currentHp = 0;
+      
       float healFraction = HealRate * IntervalTime * Math.Clamp(Voltage, 0f, 2f);
       foreach (var structure in LinkedStructures)
       {
+        
         for (int sectionIndex = 0; sectionIndex < structure.Sections.Length; sectionIndex++)
         {
           var section = structure.Sections[sectionIndex];
+          currentHp += structure.Health - section.damage;
+          maxHp += structure.Health;
+          
           if (section.damage > float.Epsilon)
           {
             structure.AddDamage(sectionIndex, -structure.MaxHealth * healFraction);
           }
         }
       }
+      
+      item.SendSignal((currentHp/maxHp*100f).ToString("N0"), S_CURRENT_HULLHP_PERCENT);
     }
 
     public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
