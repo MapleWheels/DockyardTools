@@ -118,14 +118,14 @@ public partial class FighterHUD
           DrawLineWithShadow(batch, _depthBarMidNotch.Start, _depthBarMidNotch.End, _gaugeLineColor, width: 3f);
       
           // in-between moving lines
-          DrawDepthNotches(_currentPosition.Y);
+          DrawDepthTape(_currentPosition.Y);
           
           // tests: depth number
           Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
           GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
         }
         
-        void DrawDepthNotches(float currentDepth)
+        void DrawDepthTape(float currentDepth)
         {
           float minDisplayableDepth = currentDepth - (depthBarMidPoint - _depthBar.Top.Y) / _depthNotchPixelsPerUnit;
 
@@ -141,12 +141,12 @@ public partial class FighterHUD
             {
               continue;
             }
-            DrawNotchDepthBar(batch, vertOffset, notchDepth);
+            DrawDepthTapeNotch(batch, vertOffset, notchDepth);
           }
           
         }
         
-        void DrawNotchDepthBar(SpriteBatch spriteBatch, float distanceFromTop, float depthValue)
+        void DrawDepthTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float depthValue)
         { 
           DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop), _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
           GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 20f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: GUIStyle.SmallFont);
@@ -165,13 +165,13 @@ public partial class FighterHUD
           // tests: speed number
           float speed = (float)Math.Sqrt(Math.Pow(_currentVelocity.X, 2) + Math.Pow(_currentVelocity.Y, 2));
 
-          DrawSpeedNotches(speed);
+          DrawSpeedTape(speed);
           
           Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top + (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
           GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor, font: GUIStyle.DigitalFont);
         }
         
-        void DrawSpeedNotches(float currentSpeed)
+        void DrawSpeedTape(float currentSpeed)
         {
           float minDisplayableSpeed = currentSpeed - (speedBarMidPoint - _speedBar.Top.Y) / _speedNotchPixelsPerUnit;
 
@@ -187,18 +187,16 @@ public partial class FighterHUD
             {
               continue;
             }
-            DrawNotchSpeedBar(batch, vertOffset, notchSpeed);
+            DrawSpeedTapeNotch(batch, vertOffset, notchSpeed);
           }
           
         }
         
-        void DrawNotchSpeedBar(SpriteBatch spriteBatch, float distanceFromTop, float speedValue)
+        void DrawSpeedTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float speedValue)
         { 
           DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop), _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
           GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 18f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: GUIStyle.SmallFont);
         }
-
-        
         
       });
 
