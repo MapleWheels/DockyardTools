@@ -65,6 +65,7 @@ public partial class FighterHUD
   private const float GAUGE_NOTCH_DEPTH_SEPARATION = 20f;
   private const float GAUGE_NOTCH_SPEED_SEPARATION = 5f;
   private const float GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH = 10f;
+  private const float GAUGE_NUMBER_DESC_VERT_SEPARATION = 45f;
   private readonly GUIFont _gaugePrimaryNumberFont = GUIStyle.DigitalFont;
   private readonly GUIFont _gaugeNotchNumberFont = GUIStyle.SmallFont;
   private readonly Vector2 _gaugeRelativeOffset = new Vector2(0.0f, 0.5f); 
@@ -187,6 +188,7 @@ public partial class FighterHUD
           // depth number
           Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
           GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: _gaugePrimaryNumberFont);
+          GUI.DrawString(batch, offsetDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Depth", _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
         
         void DrawDepthTape(float currentDepth)
@@ -237,6 +239,7 @@ public partial class FighterHUD
           
           Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top + (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
           GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor, font: _gaugePrimaryNumberFont);
+          GUI.DrawString(batch, offsetSpeedtextPos + new Vector2(0f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Speed", _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
         
         void DrawSpeedTape(float currentSpeed)
