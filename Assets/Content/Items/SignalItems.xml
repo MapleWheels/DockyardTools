@@ -316,4 +316,41 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="50.0" />
     </Repairable>
   </Item>
+  <Item name="LuaComponent" identifier="luacomponent" category="Electrical" Tags="smallitem,logic,circuitboxcomponent" maxstacksize="8"
+        cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light"
+        isshootable="false" linkable="true" allowedlinks="dock,dockingport,smartdockingport">
+    <InventoryIcon texture="luacomp_inv.png" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Sprite texture="luacomp_sprite.png" depth="0.7" sourcerect="0,0,64,52" origin="0.5,0.5" />
+    <Body width="32" height="24" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench">
+      <RequiredItem items="wrench" type="Equipped" />
+    </Holdable>
+    <LuaComponent />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="power_in" displayname="connection.powerin"/>
+      <input name="input0" displayname="Input 0"/>
+      <input name="input1" displayname="Input 1"/>
+      <input name="input2" displayname="Input 2"/>
+      <input name="input3" displayname="Input 3"/>
+      <input name="input4" displayname="Input 4"/>
+      <input name="input5" displayname="Input 5"/>
+      <input name="input6" displayname="Input 6"/>
+      <input name="input7" displayname="Input 7"/>
+      <input name="input8" displayname="Input 8"/>
+      <input name="input9" displayname="Input 9"/>
+      <output name="power_out" displayname="connection.powerout"/>
+      <output name="output0" displayname="Output 0"/>
+      <output name="output1" displayname="Output 1"/>
+      <output name="output2" displayname="Output 2"/>
+      <output name="output3" displayname="Output 3"/>
+      <output name="output4" displayname="Output 4"/>
+      <output name="output5" displayname="Output 5"/>
+      <output name="output6" displayname="Output 6"/>
+      <output name="output7" displayname="Output 7"/>
+      <output name="output8" displayname="Output 8"/>
+      <output name="output9" displayname="Output 9"/>
+    </ConnectionPanel>
+  </Item>
 </Items>

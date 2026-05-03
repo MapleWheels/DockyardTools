@@ -31,10 +31,6 @@ namespace DockyardTools
         private ContentPackage _ownerPackage;
         public ContentPackage OwnerPackage => _ownerPackage;
         
-        public DockyardToolsPlugin()
-        {
-        }
-        
         private void PostLoadClient()
         {
             PluginService.TryGetPackageForPlugin<DockyardToolsPlugin>(out _ownerPackage);
