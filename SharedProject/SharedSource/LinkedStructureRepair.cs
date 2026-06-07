@@ -74,7 +74,7 @@ namespace DockyardTools
       
       if (!_isReady)
       {
-        item.SendSignal(S_CURRENT_HEAL_RATE_PERCENT, $"0%/s");
+        item.SendSignal($"0%/s", S_CURRENT_HEAL_RATE_PERCENT);
         item.SendSignal("0", S_CURRENT_HULLHP_PERCENT);
         return;
       }

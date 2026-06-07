@@ -75,7 +75,7 @@ public partial class DroneWifiDispatcher : ItemComponent
             .FirstOrDefault(tag => !tag.IsEmpty && REGEX_DOCKTAGID.IsMatch(tag.Value), Identifier.Empty);
         if (droneIdString.Equals(Identifier.Empty))
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, no drone wifi channel id found!");
+            LuaCsSetup.Instance.Logger.LogError($"{nameof(DroneWifiDispatcher)}: Unable to bind to docking port, no drone wifi channel id found!");
             IsActive = false;
             return;
         }
@@ -84,21 +84,21 @@ public partial class DroneWifiDispatcher : ItemComponent
         var splitstring = droneIdString.ToString().Split("=");
         if (splitstring.Length != 2)
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Incorrect amount of arguments in tag.");
+            LuaCsSetup.Instance.Logger.LogError($"{nameof(DroneWifiDispatcher)}: Incorrect amount of arguments in tag.");
             IsActive = false;
             return;
         }
 
         if (!int.TryParse(splitstring[1], out var droneId))
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: Cannot parse wifi channel/drone id.");
+            LuaCsSetup.Instance.Logger.LogError($"{nameof(DroneWifiDispatcher)}: Cannot parse wifi channel/drone id.");
             IsActive = false;
             return;
         }
 
         if (droneId is < 0 or > int.MaxValue)
         {
-            ModUtils.Logging.PrintError($"{nameof(DroneWifiDispatcher)}: The Wifi Channel of {droneId} is out of range.");
+            LuaCsSetup.Instance.Logger.LogError($"{nameof(DroneWifiDispatcher)}: The Wifi Channel of {droneId} is out of range.");
             IsActive = false;
             return;
         }
@@ -122,7 +122,7 @@ public partial class DroneWifiDispatcher : ItemComponent
 
     private void SendIdChannels()
     {
-        ModUtils.Logging.PrintMessage($"{nameof(DroneWifiDispatcher)}: Connected with ID: {DroneId}. Setting channels.");
+        LuaCsSetup.Instance.Logger.Log($"{nameof(DroneWifiDispatcher)}: Connected with ID: {DroneId}. Setting channels.");
         int ch = DroneId;
         item.SendSignal(ch.ToString(), S_WIFICHANNEL_VELX_IN);
         ch++;
