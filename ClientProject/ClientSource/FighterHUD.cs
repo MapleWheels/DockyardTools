@@ -40,7 +40,13 @@ public partial class FighterHUD
   
   [Editable, Serialize("HULL_INTEGRITY", IsPropertySaveable.No, "Hull Integrity Display Text.")]
   public string HullIntegrityName { get; set; }
-
+  
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the crush depth.")]
+  public bool RenderCrushDepth { get; set; }
+  
+  [Editable(0f, 10000f, 0), Serialize(500f, IsPropertySaveable.No, description: "Distance until crush depth to being displaying the warning.")]
+  public float CrushDepthDistanceThreshold { get; set; }
+  
   
   
   #endregion
@@ -53,7 +59,9 @@ public partial class FighterHUD
   private (Vector2 Start, Vector2 End) _depthBarTopNotch, _depthBarBottomNotch, _depthBarMidNotch, 
     _speedBarTopNotch, _speedBarBottomNotch, _speedBarMidNotch;
   private Vector2 _infoTextsValuesOffset;
+  private float _submarineCrushDepth;
   
+  private RenderHelperComponent _crushDepthWarningInfoText;
 
   private float _depthNotchPixelSeparation, _speedNotchPixelSeparation;
   private float _depthNotchPixelsPerUnit, _speedNotchPixelsPerUnit;
@@ -71,6 +79,7 @@ public partial class FighterHUD
   private readonly Vector2 _gaugeRelativeOffset = new Vector2(0.0f, 0.5f); 
   private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-90f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
   private readonly Vector2 _gaugeFixedOffsetSpeed = new Vector2(20f, -20f) + new Vector2(GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
+  private readonly Vector2 _gaugeFixedOffsetCrushDepth = new Vector2(-130f, 0f); // offset added to _gaugeFixedOffsetDepth.
   private readonly Color _gaugeTextColor = new Color(41,255,62, 255);
   private readonly Color _gaugeLineColor = new Color(41,255,62, 175);
   private readonly Vector2 _barLinesPadding = new Vector2(20f, 10f);
@@ -81,7 +90,9 @@ public partial class FighterHUD
   private readonly Color _infoTextsDescriptionColor = new Color(41,255,62, 255);
   private readonly Color _infoTextsValueHighColor = new Color(41,255,62, 255);
   private readonly Color _infoTextsValueLowColor = new Color(255,61,62, 255);
-  
+  private readonly Color _infoTextsDangerTextColor = new Color(255,50,50, 255);
+  private const float CRUSH_DEPTH_FLASHING_DUTY_CYCLE = 0.7f;
+  private const float CRUSH_DEPTH_FLASHING_INTERVAL = 1.3f;
 
   public override void CreateGUI()
   {
@@ -93,6 +104,12 @@ public partial class FighterHUD
   {
     base.OnItemLoaded();
     CreateHUD();
+  }
+
+  public override void OnMapLoaded()
+  {
+    base.OnMapLoaded();
+    _submarineCrushDepth = this.Item.Submarine.Info.GetSubCrushDepth();
   }
 
   private void CreateHUD()
@@ -167,6 +184,11 @@ public partial class FighterHUD
         if (RenderHullIntegrity)
         {
           DrawHullHpPercentage();
+        }
+
+        if (RenderCrushDepth)
+        {
+          DrawCrushDepthGauge();
         }
 
 
@@ -301,9 +323,31 @@ public partial class FighterHUD
           GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor, font: _infoTextsValuesFont);
         }
 
+        void DrawCrushDepthGauge()
+        {
+          if (_crushDepthWarningInfoText is null)
+          {
+            _crushDepthWarningInfoText = new RenderHelperComponent(
+              onDraw: (comp) =>
+              {
+                Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
+                GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerTextColor, font: _gaugePrimaryNumberFont);
+                GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerTextColor, font: _gaugeNotchNumberFont);
+              },
+              onUpdate: (comp, deltaTime) =>
+              {
+                comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThreshold;
+              });
+            _crushDepthWarningInfoText.FlashingEnabled = true;
+            _crushDepthWarningInfoText.FlashDuration = CRUSH_DEPTH_FLASHING_INTERVAL;
+            _crushDepthWarningInfoText.FlashingDutyCycle = CRUSH_DEPTH_FLASHING_DUTY_CYCLE;
+          }
+          
+          _crushDepthWarningInfoText?.Draw();
+        }
+
         #endregion
       });
-
     
     
     void DrawLineWithShadow(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float depth = 0f,
@@ -313,6 +357,7 @@ public partial class FighterHUD
       GUI.DrawLine(spriteBatch, start, end, new Color(color.R/2, color.G/2, color.B/2, 175), depth+1, width+1);
       GUI.DrawLine(spriteBatch, start, end, color, depth, width);
     }
+    
     void CalculateDrawArea()
     {
       _screenDrawSize = new Vector2(GameMain.GraphicsWidth * GuiSizeRatioX, GameMain.GraphicsHeight * GuiSizeRatioY);
@@ -324,6 +369,11 @@ public partial class FighterHUD
         BottomRight: new Vector2(GameMain.GraphicsWidth -spacingHorizontal, GameMain.GraphicsHeight - spacingVertical),
         BottomLeft: new Vector2(spacingHorizontal, GameMain.GraphicsHeight - spacingVertical));
     }
+  }
+
+  public override void Update(float deltaTime, Camera cam)
+  {
+    _crushDepthWarningInfoText?.Update(deltaTime);
   }
 
   public override void DrawHUD(SpriteBatch spriteBatch, Character character)
