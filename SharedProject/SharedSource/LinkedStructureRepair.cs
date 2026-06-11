@@ -111,7 +111,7 @@ namespace DockyardTools
         }
       }
       
-      item.SendSignal((currentHp/maxHp*100f).ToString("N0"), S_CURRENT_HULLHP_PERCENT);
+      item.SendSignal((currentHp/maxHp*100f).ToString("N1"), S_CURRENT_HULLHP_PERCENT);
     }
 
     public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)

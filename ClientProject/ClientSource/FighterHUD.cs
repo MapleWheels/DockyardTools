@@ -41,6 +41,9 @@ public partial class FighterHUD
   [Editable, Serialize("HULL_INTEGRITY", IsPropertySaveable.No, "Hull Integrity Display Text.")]
   public string HullIntegrityName { get; set; }
   
+  [Editable(DecimalCount = 0, MaxValueFloat = 99f, MinValueFloat = 0f), Serialize(85f, IsPropertySaveable.No, "What hull integrity percent should be considered zero health.")]
+  public float HullIntegrityMinimumTrueValue { get; set; }
+  
   [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the crush depth.")]
   public bool RenderCrushDepth { get; set; }
   
@@ -301,22 +304,26 @@ public partial class FighterHUD
           //GUI.DrawString(batch, pos, PrimaryWeaponName, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
           var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo1Percent);
           //GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{_ammo1Percent.ToString("F1")}%", valueColor, font: _infoTextsValuesFont);
-          DrawInfoText(PrimaryWeaponName, _ammo1Percent, valueColor);
+          DrawInfoTextBottomArea(PrimaryWeaponName, _ammo1Percent, valueColor);
         }
         
         void DrawSecondaryAmmoCounter()
         {
           var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo2Percent);
-          DrawInfoText(SecondaryWeaponName, _ammo2Percent, valueColor);
+          DrawInfoTextBottomArea(SecondaryWeaponName, _ammo2Percent, valueColor);
         }
         
         void DrawHullHpPercentage()
         {
-          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _hullHpPercent);
-          DrawInfoText(HullIntegrityName, _hullHpPercent, valueColor);
+          float adjustedHpRatio =
+            (Math.Clamp(_hullHpPercent, HullIntegrityMinimumTrueValue, 100f) - HullIntegrityMinimumTrueValue) /
+            Math.Max(100f - HullIntegrityMinimumTrueValue, 0.01f);
+          float displayedHpPercentage = float.Lerp(0f, 100f, adjustedHpRatio);
+          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, adjustedHpRatio);
+          DrawInfoTextBottomArea(HullIntegrityName, displayedHpPercentage, valueColor);
         }
 
-        void DrawInfoText(string infoDescription, float infoValue, Color infoValueColor)
+        void DrawInfoTextBottomArea(string infoDescription, float infoValue, Color infoValueColor)
         {
           var pos = GetNextInfoTextsPosition();
           GUI.DrawString(batch, pos, infoDescription, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
