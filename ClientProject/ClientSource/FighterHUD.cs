@@ -1,6 +1,8 @@
 ﻿using System.Numerics;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework.Graphics;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace DockyardTools;
 
@@ -47,8 +49,11 @@ public partial class FighterHUD
   [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the crush depth.")]
   public bool RenderCrushDepth { get; set; }
   
-  [Editable(0f, 10000f, 0), Serialize(500f, IsPropertySaveable.No, description: "Distance until crush depth to being displaying the warning.")]
+  [Editable(0f, 10000f, 0), Serialize(500f, IsPropertySaveable.No, description: "Distance until crush depth to begin displaying the warning.")]
   public float CrushDepthDistanceThreshold { get; set; }
+  
+  [Editable(0f, 10000f, 0), Serialize(100f, IsPropertySaveable.No, description: "Distance until crush depth to begin audio warning.")]
+  public float CrushDepthDistanceThresholdAudio { get; set; }
   
   
   
@@ -63,8 +68,14 @@ public partial class FighterHUD
     _speedBarTopNotch, _speedBarBottomNotch, _speedBarMidNotch;
   private Vector2 _infoTextsValuesOffset;
   private float _submarineCrushDepth;
+
+  private Sprite _dangerIcon;
+
+  private ConcurrentDictionary<string, Sound> _sounds = new();
+  private ConcurrentDictionary<string, Sprite> _sprites = new();
   
-  private RenderHelperComponent _crushDepthWarningInfoText;
+  private RenderHelperComponent _crushDepthWarningInfo, _crushDepthWarningAudio;
+  
 
   private float _depthNotchPixelSeparation, _speedNotchPixelSeparation;
   private float _depthNotchPixelsPerUnit, _speedNotchPixelsPerUnit;
@@ -80,9 +91,8 @@ public partial class FighterHUD
   private readonly GUIFont _gaugePrimaryNumberFont = GUIStyle.DigitalFont;
   private readonly GUIFont _gaugeNotchNumberFont = GUIStyle.SmallFont;
   private readonly Vector2 _gaugeRelativeOffset = new Vector2(0.0f, 0.5f); 
-  private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-90f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
+  private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-105f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
   private readonly Vector2 _gaugeFixedOffsetSpeed = new Vector2(20f, -20f) + new Vector2(GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
-  private readonly Vector2 _gaugeFixedOffsetCrushDepth = new Vector2(-130f, 0f); // offset added to _gaugeFixedOffsetDepth.
   private readonly Color _gaugeTextColor = new Color(41,255,62, 255);
   private readonly Color _gaugeLineColor = new Color(41,255,62, 175);
   private readonly Vector2 _barLinesPadding = new Vector2(20f, 10f);
@@ -94,9 +104,38 @@ public partial class FighterHUD
   private readonly Color _infoTextsValueHighColor = new Color(41,255,62, 255);
   private readonly Color _infoTextsValueLowColor = new Color(255,61,62, 255);
   private readonly Color _infoTextsDangerTextColor = new Color(255,50,50, 255);
+  
+  private readonly Vector2 _dangerIconFixedOffset = new Vector2(0f, 0f);
+  // crush depth
+  private readonly Vector2 _gaugeFixedOffsetCrushDepth = new Vector2(-120f, 0f); // offset added to _gaugeFixedOffsetDepth.
+  private readonly Vector2 _crushDepthDangerIconFixedOffset = new Vector2(-90f, 0f);
   private const float CRUSH_DEPTH_FLASHING_DUTY_CYCLE = 0.7f;
   private const float CRUSH_DEPTH_FLASHING_INTERVAL = 1.3f;
+  private const float CRUSH_DEPTH_AUDIO_WARNING_INTERVAL = 5f;
 
+  private void LoadAssets(ContentXElement element)
+  {
+    var soundData = element.GetChildElement("Sounds")!
+      .GetChildElements("Sound")
+      .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
+
+    foreach (var sound in soundData)
+    {
+      _sounds.TryAdd(sound.Key, GameMain.SoundManager.LoadSound(soundData[sound.Key], false));
+    }
+    
+    var spriteData = element.GetChildElement("Sprites")!
+      .GetChildElements("Sprite")
+      .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
+
+    foreach (var sprite in spriteData)
+    {
+      _sprites.TryAdd(sprite.Key, new Sprite(sprite.Value));
+    }
+    
+    _dangerIcon = _sprites["danger-indicator-icon"];
+  }
+  
   public override void CreateGUI()
   {
     base.CreateGUI();
@@ -191,7 +230,7 @@ public partial class FighterHUD
 
         if (RenderCrushDepth)
         {
-          DrawCrushDepthGauge();
+          DrawCrushDepthWarnings();
         }
 
 
@@ -330,14 +369,16 @@ public partial class FighterHUD
           GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor, font: _infoTextsValuesFont);
         }
 
-        void DrawCrushDepthGauge()
+        void DrawCrushDepthWarnings()
         {
-          if (_crushDepthWarningInfoText is null)
+          if (_crushDepthWarningInfo is null)
           {
-            _crushDepthWarningInfoText = new RenderHelperComponent(
+            _crushDepthWarningInfo = new RenderHelperComponent(
               onDraw: (comp) =>
               {
                 Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
+                _dangerIcon.Draw(batch, offsetCrushDepthTextPos + _dangerIconFixedOffset + _crushDepthDangerIconFixedOffset, Color.White, 
+                  _dangerIcon.RelativeOrigin, 0f, _dangerIcon.RelativeSize);
                 GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerTextColor, font: _gaugePrimaryNumberFont);
                 GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerTextColor, font: _gaugeNotchNumberFont);
               },
@@ -345,12 +386,36 @@ public partial class FighterHUD
               {
                 comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThreshold;
               });
-            _crushDepthWarningInfoText.FlashingEnabled = true;
-            _crushDepthWarningInfoText.FlashDuration = CRUSH_DEPTH_FLASHING_INTERVAL;
-            _crushDepthWarningInfoText.FlashingDutyCycle = CRUSH_DEPTH_FLASHING_DUTY_CYCLE;
+            _crushDepthWarningInfo.FlashingEnabled = true;
+            _crushDepthWarningInfo.FlashDuration = CRUSH_DEPTH_FLASHING_INTERVAL;
+            _crushDepthWarningInfo.FlashingDutyCycle = CRUSH_DEPTH_FLASHING_DUTY_CYCLE;
+          }
+
+          if (_crushDepthWarningAudio is null)
+          {
+            _crushDepthWarningAudio = new RenderHelperComponent(onDraw: comp =>
+              {
+                var depthWarning = _sounds["depth-limit-0-female"];
+                if (!depthWarning.IsPlaying())
+                {
+                  depthWarning.Play(new Vector3(Item.PositionX, Item.PositionY, 0f), 1f);
+                }
+
+                comp.FlashingDutyTimeRemaining = 0f;
+              }, 
+              onUpdate: (comp, deltaTime) =>
+            {
+              comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThresholdAudio;
+            }, false, true);
+            
+            _crushDepthWarningAudio.FlashingEnabled = true;
+            _crushDepthWarningAudio.FlashDuration = CRUSH_DEPTH_AUDIO_WARNING_INTERVAL;
+            _crushDepthWarningAudio.FlashingDutyCycle = 1f;  // disabled in draw after playing
           }
           
-          _crushDepthWarningInfoText?.Draw();
+          // we do audio using draw() so that it's only played on the client if they are controlling the periscope.
+          _crushDepthWarningInfo?.Draw();
+          _crushDepthWarningAudio?.Draw();
         }
 
         #endregion
@@ -377,10 +442,14 @@ public partial class FighterHUD
         BottomLeft: new Vector2(spacingHorizontal, GameMain.GraphicsHeight - spacingVertical));
     }
   }
+  
+  // sound tests
+  private float timer = -0f;
 
   public override void Update(float deltaTime, Camera cam)
   {
-    _crushDepthWarningInfoText?.Update(deltaTime);
+    _crushDepthWarningInfo?.Update(deltaTime);
+    _crushDepthWarningAudio?.Update(deltaTime);
   }
 
   public override void DrawHUD(SpriteBatch spriteBatch, Character character)

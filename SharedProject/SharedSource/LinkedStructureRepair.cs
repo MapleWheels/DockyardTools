@@ -48,7 +48,7 @@ namespace DockyardTools
         .ToImmutableArray();
       _networkHelper.NetworkUpdateReady();
     }
-
+    
     public override void Update(float deltaTime, Camera cam)
     {
       if (LinkedStructures.IsDefaultOrEmpty || !IsActive || !HasPower)

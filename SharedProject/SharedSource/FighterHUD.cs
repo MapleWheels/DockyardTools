@@ -21,7 +21,9 @@ namespace DockyardTools
       IsActive = true;
 #if CLIENT
       CreateHUD();
+      LoadAssets(element);
 #endif
+      
     }
 
     public override void ReceiveSignal(Signal signal, Connection connection)

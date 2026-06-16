@@ -17,18 +17,18 @@ public class RenderHelperComponent : IDisposable
   /// <summary>
   /// The total time remaining until the flashing cycle is restarted.
   /// </summary>
-  private float _flashingTimeUntilReset;
+  public float FlashingTimeUntilReset;
   /// <summary>
   /// The ON/duty time remaining in the current flashing cycle.
   /// </summary>
-  private float _flashingDutyTimeRemaining;
+  public float FlashingDutyTimeRemaining;
   
-  public RenderHelperComponent(Action<RenderHelperComponent> onDraw, Action<RenderHelperComponent, float> onUpdate)
+  public RenderHelperComponent(Action<RenderHelperComponent> onDraw, Action<RenderHelperComponent, float> onUpdate, bool shouldRender = true, bool shouldUpdate = true)
   {
-    _onDraw = onDraw ?? throw new ArgumentNullException(nameof(onDraw));
-    _onUpdate = onUpdate ?? throw new ArgumentNullException(nameof(onUpdate));
-    ShouldRender = true;
-    ShouldUpdate = true;
+    _onDraw = onDraw;
+    _onUpdate = onUpdate;
+    ShouldRender = shouldRender;
+    ShouldUpdate = shouldUpdate;
   }
 
   public void Draw()
@@ -38,12 +38,12 @@ public class RenderHelperComponent : IDisposable
       return;
     }
 
-    if (FlashingEnabled && _flashingDutyTimeRemaining < float.Epsilon)
+    if (FlashingEnabled && FlashingDutyTimeRemaining < float.Epsilon)
     {
       return;
     }
     
-    _onDraw(this);
+    _onDraw?.Invoke(this);
   }
 
   public void Update(float deltaTime)
@@ -55,17 +55,17 @@ public class RenderHelperComponent : IDisposable
 
     if (FlashingEnabled)
     {
-      _flashingDutyTimeRemaining -= deltaTime;
-      _flashingTimeUntilReset -= deltaTime;
+      FlashingDutyTimeRemaining -= deltaTime;
+      FlashingTimeUntilReset -= deltaTime;
       
-      if (_flashingTimeUntilReset < float.Epsilon)
+      if (FlashingTimeUntilReset < float.Epsilon)
       {
-        _flashingDutyTimeRemaining = FlashDuration * FlashingDutyCycle;
-        _flashingTimeUntilReset = FlashDuration;
+        FlashingDutyTimeRemaining = FlashDuration * FlashingDutyCycle;
+        FlashingTimeUntilReset = FlashDuration;
       }
     }
     
-    _onUpdate(this, deltaTime);
+    _onUpdate?.Invoke(this, deltaTime);
   }
 
 

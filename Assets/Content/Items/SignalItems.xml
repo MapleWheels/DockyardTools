@@ -174,6 +174,14 @@
     <FighterHUD canbeselected="true" allowuioverlap="true">
       <!-- We draw using GUI.Canvas but use the Item.Selected to control whether to draw at all. -->
       <GuiFrame relativesize="0.01,0.01" anchor="Center" draggable="false" />
+      <Sounds>
+        <Sound name="clacker" file="%ModDir%/Sounds/clacker.ogg" volume="100"/>
+        <Sound name="master_caution" file="%ModDir%/Sounds/master_caution.ogg" volume="100"/>
+        <Sound name="depth-limit-0-female" file="%ModDir%/Sounds/voice/depth-limit-0-female.ogg" volume="100"/>
+      </Sounds>
+      <Sprites>
+        <Sprite name="danger-indicator-icon" texture="%ModDir%/GUI/danger-indicator-icon-0.png" size="0.125,0.125" sourcerect="0,0,512,512"/>
+      </Sprites>
     </FighterHUD>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" allowuioverlap="true" hudlayer="-2">
       <GuiFrame relativesize="0.3,0.29" anchor="CenterLeft" relativeoffset="0.01,-0.30" draggable="true" />
