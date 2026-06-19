@@ -16,16 +16,6 @@ namespace DockyardTools
     private Vector2 _currentPosition, _currentVelocity;
     private float _ammo1Percent, _ammo2Percent, _hullHpPercent;
     
-    public FighterHUD(Item item, ContentXElement element) : base(item, element)
-    {
-      IsActive = true;
-#if CLIENT
-      CreateHUD();
-      LoadAssets(element);
-#endif
-      
-    }
-
     public override void ReceiveSignal(Signal signal, Connection connection)
     {
       base.ReceiveSignal(signal, connection);

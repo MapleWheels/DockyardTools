@@ -177,11 +177,26 @@
       <Sounds>
         <Sound name="clacker" file="%ModDir%/Sounds/clacker.ogg" volume="100"/>
         <Sound name="master_caution" file="%ModDir%/Sounds/master_caution.ogg" volume="100"/>
-        <Sound name="depth-limit-0-female" file="%ModDir%/Sounds/voice/depth-limit-0-female.ogg" volume="100"/>
+        <Sound name="depth-limit-0-female" file="%ModDir%/Sounds/voice/depth-limit-0-female.ogg" volume="80"/>
       </Sounds>
       <Sprites>
         <Sprite name="danger-indicator-icon" texture="%ModDir%/GUI/danger-indicator-icon-0.png" size="0.125,0.125" sourcerect="0,0,512,512"/>
       </Sprites>
+      <Colors>
+        <Color name="info-texts-description" rgba="41,255,62,255" />
+        <Color name="info-texts-value-high" rgba="41,255,62,255" />
+        <Color name="info-texts-value-low" rgba="255,61,62,255" />
+        <Color name="info-texts-danger" rgba="255,50,50,255" />
+        <Color name="gauge-line" rgba="41,255,62,175" />
+        <Color name="gauge-text" rgba="41,255,62,255" />
+        <Color name="info-texts-warning" rgba="255,255,125,255" />
+      </Colors>
+      <Messages>
+        <Message name="power-low" priority="Warning" identifier="DockyardTools.StatusMessages.PowerLow" />
+        <Message name="depth-limit" priority="Danger" identifier="DockyardTools.StatusMessages.CrushDepth" />
+        <Message name="descent-speed-high" priority="Danger" identifier="DockyardTools.StatusMessages.DontSink" />
+        <Message name="hull-damaged" priority="Warning" identifier="DockyardTools.StatusMessages.HullDamaged" />
+      </Messages>
     </FighterHUD>
     <Sonar canbeselected="true" powerconsumption="100" displaybordersize="-0.1" allowuioverlap="true" hudlayer="-2">
       <GuiFrame relativesize="0.3,0.29" anchor="CenterLeft" relativeoffset="0.01,-0.30" draggable="true" />

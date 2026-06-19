@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration>
     <Settings>
-        <Setting Name="ControlForwardX" Type="control" Value="Right"/>
-        <Setting Name="ControlReverseX" Type="control" Value="Left"/>
-        <Setting Name="ControlUpY" Type="control" Value="Up"/>
-        <Setting Name="ControlDownY" Type="control" Value="Down"/>
+        <Setting Name="ControlForwardX" Type="control" Value="D"/>
+        <Setting Name="ControlReverseX" Type="control" Value="A"/>
+        <Setting Name="ControlUpY" Type="control" Value="W"/>
+        <Setting Name="ControlDownY" Type="control" Value="S"/>
         <Setting Name="ControlToggleDocking" Type="control" Value="Z"/>
         <Setting Name="ControlExtraAttack" Type="control" Value="F"/>
         <Setting Name="ControlUtility" Type="control" Value="Y"/>

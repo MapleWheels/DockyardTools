@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
+    <!-- SETTINGS -->
     <DockyardTools.ControlForwardX.DisplayName>Vehicle Forward (Right)</DockyardTools.ControlForwardX.DisplayName>
     <DockyardTools.ControlReverseX.DisplayName>Vehicle Reverse (Left)</DockyardTools.ControlReverseX.DisplayName>
     <DockyardTools.ControlUpY.DisplayName>Vehicle Ascend (Up)</DockyardTools.ControlUpY.DisplayName>
@@ -18,4 +19,10 @@
     <DockyardTools.ControlExtraAttack.DisplayCategory>Controls</DockyardTools.ControlExtraAttack.DisplayCategory>
     <DockyardTools.ControlUtility.DisplayCategory>Controls</DockyardTools.ControlUtility.DisplayCategory>
     <DockyardTools.InputSensitivity.DisplayCategory>Controls</DockyardTools.InputSensitivity.DisplayCategory>
+
+    <!-- Fighter GUI Messages-->
+    <DockyardTools.StatusMessages.PowerLow>BATT POWER LOW</DockyardTools.StatusMessages.PowerLow>
+    <DockyardTools.StatusMessages.CrushDepth>HIGH PRESS</DockyardTools.StatusMessages.CrushDepth>
+    <DockyardTools.StatusMessages.DontSink>SINK RATE HIGH</DockyardTools.StatusMessages.DontSink>
+    <DockyardTools.StatusMessages.HullDamaged>HULL INTEGRITY</DockyardTools.StatusMessages.HullDamaged>
 </infotexts>

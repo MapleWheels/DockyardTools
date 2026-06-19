@@ -55,6 +55,9 @@ public partial class FighterHUD
   [Editable(0f, 10000f, 0), Serialize(100f, IsPropertySaveable.No, description: "Distance until crush depth to begin audio warning.")]
   public float CrushDepthDistanceThresholdAudio { get; set; }
   
+  [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the notification system.")]
+  public bool RenderNotificationSystem { get; set; }
+  
   
   
   #endregion
@@ -67,20 +70,37 @@ public partial class FighterHUD
   private (Vector2 Start, Vector2 End) _depthBarTopNotch, _depthBarBottomNotch, _depthBarMidNotch, 
     _speedBarTopNotch, _speedBarBottomNotch, _speedBarMidNotch;
   private Vector2 _infoTextsValuesOffset;
-  private float _submarineCrushDepth;
-
-  private Sprite _dangerIcon;
-
-  private ConcurrentDictionary<string, Sound> _sounds = new();
-  private ConcurrentDictionary<string, Sprite> _sprites = new();
-  
-  private RenderHelperComponent _crushDepthWarningInfo, _crushDepthWarningAudio;
-  
-
   private float _depthNotchPixelSeparation, _speedNotchPixelSeparation;
   private float _depthNotchPixelsPerUnit, _speedNotchPixelsPerUnit;
   
-  // -- Config
+  
+  // assets general
+  private readonly Sprite _dangerIcon;
+  private readonly ConcurrentDictionary<string, Sound> _sounds = new();
+  private readonly ConcurrentDictionary<string, Sprite> _sprites = new();
+  private readonly ConcurrentDictionary<string, Color> _colors = new();
+  private readonly ConcurrentDictionary<string, NotificationDisplayHelper.Notification> _notifications = new();
+
+  // general/master
+  private readonly Vector2 _dangerIconFixedOffset = new Vector2(0f, 0f);
+
+  // -- Warning Systems
+  private RenderHelperComponent _masterCautionAudio;
+  private bool _triggerMasterCautionAudio, _masterCautionAudioTriggered;
+  private readonly NotificationDisplayHelper _notificationSystem;
+
+  private readonly NotificationDisplayHelper.Notification
+    _notificationPowerLow, _notificationDepthLimit, _notificationDescentSpeedHigh, _notificationHullDamaged;
+
+  private readonly Color _infoTextsDescriptionColor;
+  private readonly Color _infoTextsValueHighColor;
+  private readonly Color _infoTextsValueLowColor;
+  private readonly Color _infoTextsDangerColor;
+  private readonly GUIFont _infoTextsDescriptionFont = GUIStyle.Font;
+  private readonly GUIFont _infoTextsValuesFont = GUIStyle.DigitalFont;
+  private readonly Vector2 _notificationsAreaTopLeftRelative = new Vector2(0f, 0.6f);
+  
+  // tapes
   private const float GAUGE_NOTCH_LINES_WIDTH = 20f;
   private const float GAUGE_NOTCH_DEPTH_LINES_COUNT = 10f;
   private const float GAUGE_NOTCH_SPEED_LINES_COUNT = 10f;
@@ -88,52 +108,122 @@ public partial class FighterHUD
   private const float GAUGE_NOTCH_SPEED_SEPARATION = 5f;
   private const float GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH = 10f;
   private const float GAUGE_NUMBER_DESC_VERT_SEPARATION = 45f;
+  private readonly Vector2 _barLinesPadding = new Vector2(20f, 10f);
+  private readonly Color _gaugeLineColor;
+  
+  // readings/gauges general
+  private readonly Color _gaugeTextColor;
   private readonly GUIFont _gaugePrimaryNumberFont = GUIStyle.DigitalFont;
   private readonly GUIFont _gaugeNotchNumberFont = GUIStyle.SmallFont;
   private readonly Vector2 _gaugeRelativeOffset = new Vector2(0.0f, 0.5f); 
-  private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-105f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
+  private readonly Vector2 _gaugeFixedOffsetDepth = new Vector2(-130f, -20f) + new Vector2(-GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
   private readonly Vector2 _gaugeFixedOffsetSpeed = new Vector2(20f, -20f) + new Vector2(GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, 0f); 
-  private readonly Color _gaugeTextColor = new Color(41,255,62, 255);
-  private readonly Color _gaugeLineColor = new Color(41,255,62, 175);
-  private readonly Vector2 _barLinesPadding = new Vector2(20f, 10f);
   private readonly Vector2 _infoTextsRenderStartOffset = new Vector2(0f, 15f);
   private readonly Vector2 _infoTextsRenderSpacing = new Vector2(0f, 35f);
-  private readonly GUIFont _infoTextsDescriptionFont = GUIStyle.Font;
-  private readonly GUIFont _infoTextsValuesFont = GUIStyle.DigitalFont;
-  private readonly Color _infoTextsDescriptionColor = new Color(41,255,62, 255);
-  private readonly Color _infoTextsValueHighColor = new Color(41,255,62, 255);
-  private readonly Color _infoTextsValueLowColor = new Color(255,61,62, 255);
-  private readonly Color _infoTextsDangerTextColor = new Color(255,50,50, 255);
   
-  private readonly Vector2 _dangerIconFixedOffset = new Vector2(0f, 0f);
   // crush depth
+  private float _submarineCrushDepth;
+  private RenderHelperComponent _crushDepthWarningInfo, _crushDepthWarningAudio;
   private readonly Vector2 _gaugeFixedOffsetCrushDepth = new Vector2(-120f, 0f); // offset added to _gaugeFixedOffsetDepth.
   private readonly Vector2 _crushDepthDangerIconFixedOffset = new Vector2(-90f, 0f);
   private const float CRUSH_DEPTH_FLASHING_DUTY_CYCLE = 0.7f;
   private const float CRUSH_DEPTH_FLASHING_INTERVAL = 1.3f;
   private const float CRUSH_DEPTH_AUDIO_WARNING_INTERVAL = 5f;
 
-  private void LoadAssets(ContentXElement element)
+  public FighterHUD(Item item, ContentXElement element) : base(item, element)
   {
-    var soundData = element.GetChildElement("Sounds")!
-      .GetChildElements("Sound")
-      .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
-
-    foreach (var sound in soundData)
-    {
-      _sounds.TryAdd(sound.Key, GameMain.SoundManager.LoadSound(soundData[sound.Key], false));
-    }
+    // ReSharper disable once VirtualMemberCallInConstructor
+    IsActive = true;
+    _notificationSystem = new();
     
-    var spriteData = element.GetChildElement("Sprites")!
-      .GetChildElements("Sprite")
-      .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
-
-    foreach (var sprite in spriteData)
-    {
-      _sprites.TryAdd(sprite.Key, new Sprite(sprite.Value));
-    }
+    // value init
+    // colors
+    LoadColors();
+    _infoTextsDescriptionColor = _colors["info-texts-description"];
+    _infoTextsValueHighColor = _colors["info-texts-value-high"];
+    _infoTextsValueLowColor = _colors["info-texts-value-low"];
+    _infoTextsDangerColor = _colors["info-texts-danger"];
+    _gaugeLineColor = _colors["gauge-line"];
+    _gaugeTextColor = _colors["gauge-text"];
     
+    // sprites
+    LoadSprites();
     _dangerIcon = _sprites["danger-indicator-icon"];
+    
+    // sounds
+    LoadSounds();
+    
+    // notifications
+    _notificationSystem.DrawPastMaxHeight = false;
+    _notificationSystem.MaxHeight = 500f;  
+    NotificationDisplayHelper.Notification.DefaultDangerColor = _infoTextsDangerColor;
+    NotificationDisplayHelper.Notification.DefaultWarningColor = _colors["info-texts-warning"];
+    NotificationDisplayHelper.Notification.DefaultFont = GUIStyle.SmallFont;
+    LoadNotificationsData();
+    _notificationPowerLow = _notifications["power-low"];
+    _notificationDepthLimit = _notifications["depth-limit"];
+    _notificationDescentSpeedHigh = _notifications["descent-speed-high"];
+    _notificationHullDamaged = _notifications["hull-damaged"];
+    
+    CreateHUD();
+
+
+    void LoadNotificationsData()
+    {
+      var notificationsData = element.GetChildElement("Messages")!
+        .GetChildElements("Message")
+        .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
+
+      foreach (var notificationData in notificationsData)
+      {
+        var notification = new NotificationDisplayHelper.Notification(
+          notificationData.Key,
+          TextManager.Get(notificationData.Value.GetAttributeString("identifier", string.Empty))
+            .Fallback(notificationData.Key).ToString(),
+          notificationData.Value.GetAttributeEnum("priority",
+            NotificationDisplayHelper.Notification.MessagePriority.Advisory));
+        notification.IsEnabled = false;
+        
+        _notifications.TryAdd(notificationData.Key, notification);
+        _notificationSystem.AddMessage(notification);
+      }
+    }
+    
+    void LoadColors()
+    {
+      var colorData = element.GetChildElement("Colors")!
+        .GetChildElements("Color")
+        .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
+
+      foreach (var color in colorData)
+      {
+        _colors.TryAdd(color.Key, color.Value.GetAttributeColor("rgba", new Color(255, 255, 255, 255)));
+      }
+    }
+    
+    void LoadSprites()
+    {
+      var spriteData = element.GetChildElement("Sprites")!
+        .GetChildElements("Sprite")
+        .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
+
+      foreach (var sprite in spriteData)
+      {
+        _sprites.TryAdd(sprite.Key, new Sprite(sprite.Value));
+      }
+    } 
+    
+    void LoadSounds()
+    {
+      var soundData = element.GetChildElement("Sounds")!
+        .GetChildElements("Sound")
+        .ToImmutableDictionary(elem => elem.GetAttributeString("name", string.Empty));
+
+      foreach (var sound in soundData)
+      {
+        _sounds.TryAdd(sound.Key, GameMain.SoundManager.LoadSound(soundData[sound.Key], false));
+      }
+    } 
   }
   
   public override void CreateGUI()
@@ -233,6 +323,11 @@ public partial class FighterHUD
           DrawCrushDepthWarnings();
         }
 
+        if (RenderNotificationSystem)
+        {
+          DrawNotifications();
+        }
+        
 
         #region DEPTH_TAPE
 
@@ -279,7 +374,7 @@ public partial class FighterHUD
         void DrawDepthTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float depthValue)
         { 
           DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop), _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
-          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 20f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
+          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 15f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
 
         #endregion
@@ -330,7 +425,7 @@ public partial class FighterHUD
         void DrawSpeedTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float speedValue)
         { 
           DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop), _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
-          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 25f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
+          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 35f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
 
         #endregion
@@ -360,6 +455,7 @@ public partial class FighterHUD
           float displayedHpPercentage = float.Lerp(0f, 100f, adjustedHpRatio);
           var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, adjustedHpRatio);
           DrawInfoTextBottomArea(HullIntegrityName, displayedHpPercentage, valueColor);
+          _notificationHullDamaged.IsEnabled = displayedHpPercentage < 99f;
         }
 
         void DrawInfoTextBottomArea(string infoDescription, float infoValue, Color infoValueColor)
@@ -379,12 +475,13 @@ public partial class FighterHUD
                 Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
                 _dangerIcon.Draw(batch, offsetCrushDepthTextPos + _dangerIconFixedOffset + _crushDepthDangerIconFixedOffset, Color.White, 
                   _dangerIcon.RelativeOrigin, 0f, _dangerIcon.RelativeSize);
-                GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerTextColor, font: _gaugePrimaryNumberFont);
-                GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerTextColor, font: _gaugeNotchNumberFont);
+                GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerColor, font: _gaugePrimaryNumberFont);
+                GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerColor, font: _gaugeNotchNumberFont);
               },
               onUpdate: (comp, deltaTime) =>
               {
                 comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThreshold;
+                _notificationDepthLimit.IsEnabled = comp.ShouldRender;
               });
             _crushDepthWarningInfo.FlashingEnabled = true;
             _crushDepthWarningInfo.FlashDuration = CRUSH_DEPTH_FLASHING_INTERVAL;
@@ -406,6 +503,7 @@ public partial class FighterHUD
               onUpdate: (comp, deltaTime) =>
             {
               comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThresholdAudio;
+              
             }, false, true);
             
             _crushDepthWarningAudio.FlashingEnabled = true;
@@ -418,9 +516,24 @@ public partial class FighterHUD
           _crushDepthWarningAudio?.Draw();
         }
 
+        void DrawNotifications()
+        {
+          var drawPos = new Vector2(_notificationsAreaTopLeftRelative.X * _screenDrawSize.X + _screenDrawArea.TopLeft.X, _notificationsAreaTopLeftRelative.Y * _screenDrawSize.Y + _screenDrawArea.TopLeft.Y);
+          _notificationSystem.Draw(batch, drawPos, out var finalPos);
+          if (finalPos != drawPos)  // something was drawn
+          {
+            SetMasterCaution();
+          }
+          else
+          {
+            ResetMasterCaution();
+          }
+          
+          _masterCautionAudio?.Draw();
+        }
+
         #endregion
       });
-    
     
     void DrawLineWithShadow(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float depth = 0f,
       float width = 1f)
@@ -443,13 +556,49 @@ public partial class FighterHUD
     }
   }
   
-  // sound tests
-  private float timer = -0f;
+  
+  void SetMasterCaution()
+  {
+    if (_masterCautionAudio is null)
+    {
+      _masterCautionAudio = new RenderHelperComponent(onDraw: comp =>
+      {
+        var masterCaution = _sounds["master_caution"];
+        if (!masterCaution.IsPlaying())
+        {
+          masterCaution.Play(new Vector3(Item.PositionX, Item.PositionY, 0f), 1f);
+        }
 
+        comp.ShouldRender = false;
+      }, onUpdate: (comp, deltaTime) =>
+      {
+        if (_triggerMasterCautionAudio)
+        {
+          _triggerMasterCautionAudio = false;
+          if (!_masterCautionAudioTriggered)
+          {
+            comp.ShouldRender = true;
+            _masterCautionAudioTriggered = true;
+          }
+        }
+      }, false, true);
+    }
+      
+    _triggerMasterCautionAudio = true;
+  }
+
+  void ResetMasterCaution()
+  {
+    _masterCautionAudioTriggered = false;
+    _triggerMasterCautionAudio = false;
+  }
+  
   public override void Update(float deltaTime, Camera cam)
   {
     _crushDepthWarningInfo?.Update(deltaTime);
     _crushDepthWarningAudio?.Update(deltaTime);
+    _masterCautionAudio?.Update(deltaTime);
+    _notificationSystem?.Update(deltaTime);
   }
 
   public override void DrawHUD(SpriteBatch spriteBatch, Character character)
