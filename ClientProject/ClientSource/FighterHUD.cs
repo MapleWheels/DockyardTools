@@ -46,6 +46,9 @@ public partial class FighterHUD
   [Editable(DecimalCount = 0, MaxValueFloat = 99f, MinValueFloat = 0f), Serialize(85f, IsPropertySaveable.No, "What hull integrity percent should be considered zero health.")]
   public float HullIntegrityMinimumTrueValue { get; set; }
   
+  [Editable(DecimalCount = 0, MaxValueFloat = 99f, MinValueFloat = 0f), Serialize(95f, IsPropertySaveable.No, "What hull integrity percent should alarms activate.")]
+  public float HullIntegrityWarningThreshold { get; set; }
+  
   [Editable, Serialize(true, IsPropertySaveable.No, "Should we render the crush depth.")]
   public bool RenderCrushDepth { get; set; }
   
@@ -64,6 +67,8 @@ public partial class FighterHUD
   
   // -- Working vars
   private GUICustomComponent _hudDraw;
+  private Sound? _activeSound = null;
+  private readonly Queue<(Func<bool> Condition, Sound Sound)> _soundQueue = new();
   private Vector2 _screenDrawSize;
   private (Vector2 TopLeft, Vector2 TopRight, Vector2 BottomRight, Vector2 BottomLeft) _screenDrawArea;
   private (Vector2 Top, Vector2 Bottom) _depthBar, _speedBar;
@@ -72,7 +77,7 @@ public partial class FighterHUD
   private Vector2 _infoTextsValuesOffset;
   private float _depthNotchPixelSeparation, _speedNotchPixelSeparation;
   private float _depthNotchPixelsPerUnit, _speedNotchPixelsPerUnit;
-  
+  private float _depthBarMidPoint, _speedBarMidPoint;
   
   // assets general
   private readonly Sprite _dangerIcon;
@@ -86,7 +91,7 @@ public partial class FighterHUD
 
   // -- Warning Systems
   private RenderHelperComponent _masterCautionAudio;
-  private bool _triggerMasterCautionAudio, _masterCautionAudioTriggered;
+  private bool _masterCautionAudioTriggered;
   private readonly NotificationDisplayHelper _notificationSystem;
 
   private readonly NotificationDisplayHelper.Notification
@@ -98,7 +103,7 @@ public partial class FighterHUD
   private readonly Color _infoTextsDangerColor;
   private readonly GUIFont _infoTextsDescriptionFont = GUIStyle.Font;
   private readonly GUIFont _infoTextsValuesFont = GUIStyle.DigitalFont;
-  private readonly Vector2 _notificationsAreaTopLeftRelative = new Vector2(0f, 0.6f);
+  private readonly Vector2 _notificationsAreaTopLeftRelative = new Vector2(-0.16f, 0.61f);
   
   // tapes
   private const float GAUGE_NOTCH_LINES_WIDTH = 20f;
@@ -160,6 +165,7 @@ public partial class FighterHUD
     NotificationDisplayHelper.Notification.DefaultWarningColor = _colors["info-texts-warning"];
     NotificationDisplayHelper.Notification.DefaultFont = GUIStyle.SmallFont;
     LoadNotificationsData();
+    
     _notificationPowerLow = _notifications["power-low"];
     _notificationDepthLimit = _notifications["depth-limit"];
     _notificationDescentSpeedHigh = _notifications["descent-speed-high"];
@@ -249,42 +255,20 @@ public partial class FighterHUD
     GuiFrame.ClearChildren();
     CalculateDrawArea();
 
-    _depthBar = (
-      Top: _screenDrawArea.TopLeft + new Vector2(_barLinesPadding.X, _barLinesPadding.Y),
-      Bottom: _screenDrawArea.BottomLeft + new Vector2(_barLinesPadding.X, -_barLinesPadding.Y));
-    
-    _speedBar = (
-      Top: _screenDrawArea.TopRight + new Vector2(-_barLinesPadding.X, _barLinesPadding.Y),
-      Bottom: _screenDrawArea.BottomRight + new Vector2(-_barLinesPadding.X, -_barLinesPadding.Y));
-
-    float depthBarMidPoint = (_depthBar.Bottom.Y + _depthBar.Top.Y) / 2f;
-    float speedBarMidPoint = (_speedBar.Bottom.Y + _speedBar.Top.Y) / 2f;
-    
-    _depthBarTopNotch.Start = _depthBar.Top;
-    _depthBarTopNotch.End = _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-    _depthBarBottomNotch.Start = _depthBar.Bottom;
-    _depthBarBottomNotch.End = _depthBar.Bottom + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-    _depthBarMidNotch.Start = new Vector2(_depthBar.Top.X - GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, depthBarMidPoint);
-    _depthBarMidNotch.End = new Vector2(_depthBar.Top.X, depthBarMidPoint) + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-
-    _speedBarTopNotch.Start = _speedBar.Top;
-    _speedBarTopNotch.End = _speedBar.Top - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-    _speedBarBottomNotch.Start = _speedBar.Bottom;
-    _speedBarBottomNotch.End = _speedBar.Bottom - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-    _speedBarMidNotch.Start = new Vector2(_speedBar.Top.X + GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, speedBarMidPoint);
-    _speedBarMidNotch.End = new Vector2(_speedBar.Top.X, speedBarMidPoint) - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-
-    _depthNotchPixelSeparation = (_depthBar.Bottom.Y - _depthBar.Top.Y) / GAUGE_NOTCH_DEPTH_LINES_COUNT;
-    _speedNotchPixelSeparation = (_speedBar.Bottom.Y - _speedBar.Top.Y) / GAUGE_NOTCH_SPEED_LINES_COUNT;
-
-    _depthNotchPixelsPerUnit = _depthNotchPixelSeparation / GAUGE_NOTCH_DEPTH_SEPARATION;
-    _speedNotchPixelsPerUnit = _speedNotchPixelSeparation / GAUGE_NOTCH_SPEED_SEPARATION;
-
-    _infoTextsValuesOffset = new Vector2(InfoTextsHorizontalOffset, -5f);
-    
     _hudDraw = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform),
       onDraw: (batch, component) =>
       {
+        ResetLoadedNotificationsStates();
+        SetLoadedNotificationStatesConditional(out var notificationsActive);
+        if (notificationsActive)
+        {
+          SetMasterCaution();
+        }
+        else
+        {
+          ResetMasterCaution();
+        }
+
         if (RenderDepthGauge)
         {
           DrawDepthGauge();
@@ -295,28 +279,7 @@ public partial class FighterHUD
           DrawSpeedGauge();
         }
 
-        Vector2 infoTextsNextRenderPosition = _infoTextsRenderStartOffset + _depthBar.Bottom;
-        Vector2 GetNextInfoTextsPosition()
-        {
-          var curr = infoTextsNextRenderPosition;
-          infoTextsNextRenderPosition += _infoTextsRenderSpacing;
-          return curr;
-        }
-        
-        if (RenderPrimaryAmmoCounter)
-        {
-          DrawPrimaryAmmoCounter();
-        }
-
-        if (RenderSecondaryAmmoCounter)
-        {
-          DrawSecondaryAmmoCounter();
-        }
-
-        if (RenderHullIntegrity)
-        {
-          DrawHullHpPercentage();
-        }
+        DrawStatusInfoTexts(batch, _infoTextsRenderStartOffset + _depthBar.Bottom);
 
         if (RenderCrushDepth)
         {
@@ -328,6 +291,10 @@ public partial class FighterHUD
           DrawNotifications();
         }
         
+        _masterCautionAudio?.Draw(batch);
+
+        UpdateSoundQueue();
+
 
         #region DEPTH_TAPE
 
@@ -352,7 +319,7 @@ public partial class FighterHUD
         
         void DrawDepthTape(float currentDepth)
         {
-          float minDisplayableDepth = currentDepth - (depthBarMidPoint - _depthBar.Top.Y) / _depthNotchPixelsPerUnit;
+          float minDisplayableDepth = currentDepth - (_depthBarMidPoint - _depthBar.Top.Y) / _depthNotchPixelsPerUnit;
 
           // this is the lowest value notch that can display
           float minDepthNotchValue = GAUGE_NOTCH_DEPTH_SEPARATION - (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION) + minDisplayableDepth;
@@ -403,7 +370,7 @@ public partial class FighterHUD
         
         void DrawSpeedTape(float currentSpeed)
         {
-          float minDisplayableSpeed = currentSpeed - (speedBarMidPoint - _speedBar.Top.Y) / _speedNotchPixelsPerUnit;
+          float minDisplayableSpeed = currentSpeed - (_speedBarMidPoint - _speedBar.Top.Y) / _speedNotchPixelsPerUnit;
 
           // this is the lowest value notch that can display
           float minSpeedNotchValue = GAUGE_NOTCH_SPEED_SEPARATION - (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION) + minDisplayableSpeed;
@@ -431,109 +398,160 @@ public partial class FighterHUD
         #endregion
 
         #region INFO_TEXTS
-
-        void DrawPrimaryAmmoCounter()
-        {
-          //var pos = GetNextInfoTextsPosition();
-          //GUI.DrawString(batch, pos, PrimaryWeaponName, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
-          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo1Percent);
-          //GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{_ammo1Percent.ToString("F1")}%", valueColor, font: _infoTextsValuesFont);
-          DrawInfoTextBottomArea(PrimaryWeaponName, _ammo1Percent, valueColor);
-        }
         
-        void DrawSecondaryAmmoCounter()
-        {
-          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo2Percent);
-          DrawInfoTextBottomArea(SecondaryWeaponName, _ammo2Percent, valueColor);
-        }
-        
-        void DrawHullHpPercentage()
-        {
-          float adjustedHpRatio =
-            (Math.Clamp(_hullHpPercent, HullIntegrityMinimumTrueValue, 100f) - HullIntegrityMinimumTrueValue) /
-            Math.Max(100f - HullIntegrityMinimumTrueValue, 0.01f);
-          float displayedHpPercentage = float.Lerp(0f, 100f, adjustedHpRatio);
-          var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, adjustedHpRatio);
-          DrawInfoTextBottomArea(HullIntegrityName, displayedHpPercentage, valueColor);
-          _notificationHullDamaged.IsEnabled = displayedHpPercentage < 99f;
-        }
-
-        void DrawInfoTextBottomArea(string infoDescription, float infoValue, Color infoValueColor)
-        {
-          var pos = GetNextInfoTextsPosition();
-          GUI.DrawString(batch, pos, infoDescription, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
-          GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor, font: _infoTextsValuesFont);
-        }
-
         void DrawCrushDepthWarnings()
         {
-          if (_crushDepthWarningInfo is null)
-          {
-            _crushDepthWarningInfo = new RenderHelperComponent(
-              onDraw: (comp) =>
-              {
-                Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
-                _dangerIcon.Draw(batch, offsetCrushDepthTextPos + _dangerIconFixedOffset + _crushDepthDangerIconFixedOffset, Color.White, 
-                  _dangerIcon.RelativeOrigin, 0f, _dangerIcon.RelativeSize);
-                GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerColor, font: _gaugePrimaryNumberFont);
-                GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerColor, font: _gaugeNotchNumberFont);
-              },
-              onUpdate: (comp, deltaTime) =>
-              {
-                comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThreshold;
-                _notificationDepthLimit.IsEnabled = comp.ShouldRender;
-              });
-            _crushDepthWarningInfo.FlashingEnabled = true;
-            _crushDepthWarningInfo.FlashDuration = CRUSH_DEPTH_FLASHING_INTERVAL;
-            _crushDepthWarningInfo.FlashingDutyCycle = CRUSH_DEPTH_FLASHING_DUTY_CYCLE;
-          }
-
-          if (_crushDepthWarningAudio is null)
-          {
-            _crushDepthWarningAudio = new RenderHelperComponent(onDraw: comp =>
-              {
-                var depthWarning = _sounds["depth-limit-0-female"];
-                if (!depthWarning.IsPlaying())
-                {
-                  depthWarning.Play(new Vector3(Item.PositionX, Item.PositionY, 0f), 1f);
-                }
-
-                comp.FlashingDutyTimeRemaining = 0f;
-              }, 
-              onUpdate: (comp, deltaTime) =>
-            {
-              comp.ShouldRender = this.Item.Submarine.RealWorldDepth > _submarineCrushDepth - CrushDepthDistanceThresholdAudio;
-              
-            }, false, true);
-            
-            _crushDepthWarningAudio.FlashingEnabled = true;
-            _crushDepthWarningAudio.FlashDuration = CRUSH_DEPTH_AUDIO_WARNING_INTERVAL;
-            _crushDepthWarningAudio.FlashingDutyCycle = 1f;  // disabled in draw after playing
-          }
+          CheckInitCrushDepthWarningComponent();
           
           // we do audio using draw() so that it's only played on the client if they are controlling the periscope.
-          _crushDepthWarningInfo?.Draw();
-          _crushDepthWarningAudio?.Draw();
+          _crushDepthWarningInfo?.Draw(batch);
+          _crushDepthWarningAudio?.Draw(batch);
         }
 
         void DrawNotifications()
         {
           var drawPos = new Vector2(_notificationsAreaTopLeftRelative.X * _screenDrawSize.X + _screenDrawArea.TopLeft.X, _notificationsAreaTopLeftRelative.Y * _screenDrawSize.Y + _screenDrawArea.TopLeft.Y);
-          _notificationSystem.Draw(batch, drawPos, out var finalPos);
-          if (finalPos != drawPos)  // something was drawn
-          {
-            SetMasterCaution();
-          }
-          else
-          {
-            ResetMasterCaution();
-          }
           
-          _masterCautionAudio?.Draw();
+          _notificationSystem.Draw(batch, drawPos, out var finalPos);
         }
 
         #endregion
       });
+
+    void CheckInitCrushDepthWarningComponent()
+    {
+      if (_crushDepthWarningInfo is null)
+      {
+        InitCrushDepthWarningDisplayComponent();
+      }
+
+      if (_crushDepthWarningAudio is null)
+      {
+        InitCrushDepthWarningAudioComponent();
+      }
+      
+      void InitCrushDepthWarningDisplayComponent()
+      {
+        _crushDepthWarningInfo = new RenderHelperComponent(
+          onDraw: (comp, batch) =>
+          {
+            Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
+            _dangerIcon.Draw(batch, offsetCrushDepthTextPos + _dangerIconFixedOffset + _crushDepthDangerIconFixedOffset, Color.White, 
+              _dangerIcon.RelativeOrigin, 0f, _dangerIcon.RelativeSize);
+            GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerColor, font: _gaugePrimaryNumberFont);
+            GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerColor, font: _gaugeNotchNumberFont);
+          },
+          onUpdate: (comp, deltaTime) =>
+          {
+            comp.ShouldRender = GetDistanceToCrushDepth() < CrushDepthDistanceThreshold;
+            _notificationDepthLimit.IsEnabled = comp.ShouldRender;
+          });
+        _crushDepthWarningInfo.FlashingEnabled = true;
+        _crushDepthWarningInfo.FlashDuration = CRUSH_DEPTH_FLASHING_INTERVAL;
+        _crushDepthWarningInfo.FlashingDutyCycle = CRUSH_DEPTH_FLASHING_DUTY_CYCLE;
+      }
+
+      void InitCrushDepthWarningAudioComponent()
+      {
+        _crushDepthWarningAudio = new RenderHelperComponent(onDraw: (comp, batch) =>
+          {
+            var depthWarning = _sounds["depth-limit-0-female"];
+            _soundQueue.Enqueue((() => !depthWarning.IsPlaying(), depthWarning));
+            comp.FlashingDutyTimeRemaining = 0f;
+          }, 
+          onUpdate: (comp, deltaTime) =>
+          {
+            comp.ShouldRender = GetDistanceToCrushDepth() < CrushDepthDistanceThresholdAudio;
+          }, false, true);
+              
+        _crushDepthWarningAudio.FlashingEnabled = true;
+        _crushDepthWarningAudio.FlashDuration = CRUSH_DEPTH_AUDIO_WARNING_INTERVAL;
+        _crushDepthWarningAudio.FlashingDutyCycle = 1f;  // disabled in draw after playing
+      }
+    }
+
+    float GetDistanceToCrushDepth() => _submarineCrushDepth - _currentPosition.Y;
+    
+    void UpdateSoundQueue()
+    {
+      if (_activeSound is not null && _activeSound.IsPlaying())
+      {
+        return;
+      }
+      
+      if (_soundQueue.TryDequeue(out var enqueuedSound))
+      {
+        if (enqueuedSound.Condition())
+        {
+          _activeSound = enqueuedSound.Sound;
+          _activeSound.Play(new Vector3(Item.PositionX, Item.PositionY, 0f), 1f);
+        }
+      }
+    }
+
+    void ResetLoadedNotificationsStates()
+    {
+      foreach (var notification in _notifications)
+      {
+        notification.Value.IsEnabled = false;
+      }
+    }
+    
+    void SetLoadedNotificationStatesConditional(out bool notificationsActive)
+    {
+      notificationsActive = false;
+      //_notifications["power-low"].IsEnabled = // not implemented
+      //_notifications["descent-speed-high"].IsEnabled = // not implemented
+      notificationsActive |= CheckSetNotification(in _notificationDepthLimit, () => GetDistanceToCrushDepth() < CrushDepthDistanceThreshold);
+      notificationsActive |= CheckSetNotification(in _notificationHullDamaged, () => _hullHpPercent < HullIntegrityWarningThreshold);
+      
+      bool CheckSetNotification(in NotificationDisplayHelper.Notification notification, Func<bool> predicate)
+      {
+        bool val = predicate();
+        notification.IsEnabled = val;
+        return val;
+      }
+    }
+    
+    void DrawStatusInfoTexts(SpriteBatch batch, Vector2 infoTextsNextRenderPosition)
+    {
+      if (RenderPrimaryAmmoCounter)
+      {
+        var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo1Percent);
+        DrawInfoTextBottomArea(PrimaryWeaponName, _ammo1Percent, valueColor);
+      }
+
+      if (RenderSecondaryAmmoCounter)
+      {
+        var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, _ammo2Percent);
+        DrawInfoTextBottomArea(SecondaryWeaponName, _ammo2Percent, valueColor);
+      }
+
+      if (RenderHullIntegrity)
+      {
+        float adjustedHpRatio =
+          (Math.Clamp(_hullHpPercent, HullIntegrityMinimumTrueValue, 100f) - HullIntegrityMinimumTrueValue) /
+          Math.Max(100f - HullIntegrityMinimumTrueValue, 0.01f);
+        float displayedHpPercentage = float.Lerp(0f, 100f, adjustedHpRatio);
+        var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, adjustedHpRatio);
+        DrawInfoTextBottomArea(HullIntegrityName, displayedHpPercentage, valueColor);
+        _notificationHullDamaged.IsEnabled = displayedHpPercentage < 99f;
+      }
+      
+      void DrawInfoTextBottomArea(string infoDescription, float infoValue, Color infoValueColor)
+      {
+        var pos = GetNextInfoTextsPosition();
+        GUI.DrawString(batch, pos, infoDescription, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
+        GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor, font: _infoTextsValuesFont);
+      }
+      
+      Vector2 GetNextInfoTextsPosition()
+      {
+        var curr = infoTextsNextRenderPosition;
+        infoTextsNextRenderPosition += _infoTextsRenderSpacing;
+        return curr;
+      }
+    }
     
     void DrawLineWithShadow(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float depth = 0f,
       float width = 1f)
@@ -553,6 +571,39 @@ public partial class FighterHUD
         TopRight: new Vector2(GameMain.GraphicsWidth - spacingHorizontal, spacingVertical),
         BottomRight: new Vector2(GameMain.GraphicsWidth -spacingHorizontal, GameMain.GraphicsHeight - spacingVertical),
         BottomLeft: new Vector2(spacingHorizontal, GameMain.GraphicsHeight - spacingVertical));
+      
+      _depthBar = (
+      Top: _screenDrawArea.TopLeft + new Vector2(_barLinesPadding.X, _barLinesPadding.Y),
+      Bottom: _screenDrawArea.BottomLeft + new Vector2(_barLinesPadding.X, -_barLinesPadding.Y));
+    
+      _speedBar = (
+        Top: _screenDrawArea.TopRight + new Vector2(-_barLinesPadding.X, _barLinesPadding.Y),
+        Bottom: _screenDrawArea.BottomRight + new Vector2(-_barLinesPadding.X, -_barLinesPadding.Y));
+
+      _depthBarMidPoint = (_depthBar.Bottom.Y + _depthBar.Top.Y) / 2f;
+      _speedBarMidPoint = (_speedBar.Bottom.Y + _speedBar.Top.Y) / 2f;
+      
+      _depthBarTopNotch.Start = _depthBar.Top;
+      _depthBarTopNotch.End = _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+      _depthBarBottomNotch.Start = _depthBar.Bottom;
+      _depthBarBottomNotch.End = _depthBar.Bottom + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+      _depthBarMidNotch.Start = new Vector2(_depthBar.Top.X - GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, _depthBarMidPoint);
+      _depthBarMidNotch.End = new Vector2(_depthBar.Top.X, _depthBarMidPoint) + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+
+      _speedBarTopNotch.Start = _speedBar.Top;
+      _speedBarTopNotch.End = _speedBar.Top - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+      _speedBarBottomNotch.Start = _speedBar.Bottom;
+      _speedBarBottomNotch.End = _speedBar.Bottom - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+      _speedBarMidNotch.Start = new Vector2(_speedBar.Top.X + GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, _speedBarMidPoint);
+      _speedBarMidNotch.End = new Vector2(_speedBar.Top.X, _speedBarMidPoint) - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+
+      _depthNotchPixelSeparation = (_depthBar.Bottom.Y - _depthBar.Top.Y) / GAUGE_NOTCH_DEPTH_LINES_COUNT;
+      _speedNotchPixelSeparation = (_speedBar.Bottom.Y - _speedBar.Top.Y) / GAUGE_NOTCH_SPEED_LINES_COUNT;
+
+      _depthNotchPixelsPerUnit = _depthNotchPixelSeparation / GAUGE_NOTCH_DEPTH_SEPARATION;
+      _speedNotchPixelsPerUnit = _speedNotchPixelSeparation / GAUGE_NOTCH_SPEED_SEPARATION;
+
+      _infoTextsValuesOffset = new Vector2(InfoTextsHorizontalOffset, -5f);
     }
   }
   
@@ -561,36 +612,30 @@ public partial class FighterHUD
   {
     if (_masterCautionAudio is null)
     {
-      _masterCautionAudio = new RenderHelperComponent(onDraw: comp =>
+      _masterCautionAudio = new RenderHelperComponent(onDraw: (comp, batch) =>
       {
         var masterCaution = _sounds["master_caution"];
-        if (!masterCaution.IsPlaying())
-        {
-          masterCaution.Play(new Vector3(Item.PositionX, Item.PositionY, 0f), 1f);
-        }
+        _soundQueue.Enqueue((() => !masterCaution.IsPlaying(), masterCaution));
 
         comp.ShouldRender = false;
       }, onUpdate: (comp, deltaTime) =>
       {
-        if (_triggerMasterCautionAudio)
+        if (!_masterCautionAudioTriggered)
         {
-          _triggerMasterCautionAudio = false;
-          if (!_masterCautionAudioTriggered)
-          {
-            comp.ShouldRender = true;
-            _masterCautionAudioTriggered = true;
-          }
+          comp.ShouldRender = true;
+          _masterCautionAudioTriggered = true;
         }
-      }, false, true);
+
+        comp.ShouldUpdate = false;
+      }, false, false);
     }
       
-    _triggerMasterCautionAudio = true;
+    _masterCautionAudio.ShouldUpdate = true;
   }
 
   void ResetMasterCaution()
   {
     _masterCautionAudioTriggered = false;
-    _triggerMasterCautionAudio = false;
   }
   
   public override void Update(float deltaTime, Camera cam)

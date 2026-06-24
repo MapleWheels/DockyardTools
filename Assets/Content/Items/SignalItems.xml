@@ -230,6 +230,7 @@
       <Button text="Signal out #2" connection="signal_out2" />
       <Button text="Signal out #3" connection="signal_out3" />
     </CustomInterface>
+    <SignalBusController />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem items="screwdriver" type="Equipped" />
@@ -242,11 +243,13 @@
       <input name="Ammunition1In"/>
       <input name="Ammunition2In"/>
       <input name="HullHpIn"/>
+      <input name="DataBusIn" maxwires="10"/>
       <output name="position_out" displayname="connection.turretaimingout" fallbackdisplayname="inputtype.aim" />
       <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
       <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
       <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
       <output name="signal_out3" displayname="connection.signaloutx~[num]=3" />
+      <output name="DataBusOut" maxwires="10"/>
     </ConnectionPanel>
     <!-- Controller output was made editable in v1.1.4.0, disallow it on periscopes -->
     <Upgrade gameversion="1.1.4.0" allowingameediting="false" />

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace DockyardTools
 {
-  public partial class FighterHUD : ItemComponent
+  public partial class FighterHUD : ItemComponent, IDataBusSubscriber
   {
     private const string S_CURRENT_VELX_IN = "CurrentVelX";
     private const string S_CURRENT_VELY_IN = "CurrentVelY";
@@ -34,6 +34,11 @@ namespace DockyardTools
         case S_AMMO2_IN: _ammo2Percent = Math.Clamp(val, 0f, 100f); break;
         case S_HULLHP_IN: _hullHpPercent = Math.Clamp(val, 0f, 100f); break;
       }
+    }
+
+    public void OnSignalReceived(Signal source, Connection connection, string messageId, object? data)
+    {
+      
     }
   }
 }

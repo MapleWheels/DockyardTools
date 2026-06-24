@@ -101,7 +101,7 @@ public class NotificationDisplayHelper
         return;
       }
       
-      Duration = Math.Max(Duration - deltaTime, 0f);
+      Duration = Math.Max(Duration - deltaTime, -0f);
     }
   }
 
@@ -121,6 +121,8 @@ public class NotificationDisplayHelper
 
   public void Draw(SpriteBatch spriteBatch, Vector2 topLeftPosition, out Vector2 finalPosition)
   {
+    Vector2 currentPos = topLeftPosition;
+    
     foreach (var priority in Enum.GetValues<Notification.MessagePriority>())
     {
       if (!NotificationsByPriority.TryGetValue(priority, out var notificationsList))
@@ -135,12 +137,12 @@ public class NotificationDisplayHelper
           continue;
         }
         
-        if (topLeftPosition.Y > MaxHeight && !DrawPastMaxHeight)
+        if (currentPos.Y > topLeftPosition.Y + MaxHeight && !DrawPastMaxHeight)
         {
           break;
         }
         GUI.DrawString(spriteBatch, topLeftPosition, notification.Message, notification.Color, null, 0, notification.Font);
-        topLeftPosition.Y += notification.VerticalSpacing;
+        currentPos.Y += notification.VerticalSpacing;
       }
     }
     

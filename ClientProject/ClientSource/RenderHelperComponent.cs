@@ -1,4 +1,6 @@
-﻿namespace DockyardTools;
+﻿using Microsoft.Xna.Framework.Graphics;
+
+namespace DockyardTools;
 
 public class RenderHelperComponent : IDisposable
 {
@@ -12,7 +14,7 @@ public class RenderHelperComponent : IDisposable
   public float FlashingDutyCycle { get; set; }
 
   //
-  private Action<RenderHelperComponent> _onDraw;
+  private Action<RenderHelperComponent, SpriteBatch?> _onDraw;
   private Action<RenderHelperComponent, float> _onUpdate;
   /// <summary>
   /// The total time remaining until the flashing cycle is restarted.
@@ -23,7 +25,7 @@ public class RenderHelperComponent : IDisposable
   /// </summary>
   public float FlashingDutyTimeRemaining;
   
-  public RenderHelperComponent(Action<RenderHelperComponent> onDraw, Action<RenderHelperComponent, float> onUpdate, bool shouldRender = true, bool shouldUpdate = true)
+  public RenderHelperComponent(Action<RenderHelperComponent, SpriteBatch?> onDraw, Action<RenderHelperComponent, float> onUpdate, bool shouldRender = true, bool shouldUpdate = true)
   {
     _onDraw = onDraw;
     _onUpdate = onUpdate;
@@ -31,7 +33,7 @@ public class RenderHelperComponent : IDisposable
     ShouldUpdate = shouldUpdate;
   }
 
-  public void Draw()
+  public void Draw(SpriteBatch? batch)
   {
     if (!ShouldRender)
     {
@@ -43,7 +45,7 @@ public class RenderHelperComponent : IDisposable
       return;
     }
     
-    _onDraw?.Invoke(this);
+    _onDraw?.Invoke(this, batch);
   }
 
   public void Update(float deltaTime)
