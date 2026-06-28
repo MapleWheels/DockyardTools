@@ -10,7 +10,7 @@ public partial class FighterHUD
 {
   #region SerializedFields
   
-  [Editable(0.1f, 1f, 3), Serialize(0.6f, IsPropertySaveable.No, description: "Width of the GUI relative to screen width.")]
+  [Editable(0.1f, 1f, 3), Serialize(0.55f, IsPropertySaveable.No, description: "Width of the GUI relative to screen width.")]
   public float GuiSizeRatioX { get; set; }
   
   [Editable(0.1f, 1f, 3), Serialize(0.7f, IsPropertySaveable.No, description: "Height of the GUI relative to screen height.")]
@@ -90,6 +90,7 @@ public partial class FighterHUD
   private readonly Vector2 _dangerIconFixedOffset = new Vector2(0f, 0f);
 
   // -- Warning Systems
+  private RenderHelperComponent _hullDamageWarningInfo, _hullDamageWarningAudio;
   private RenderHelperComponent _masterCautionAudio;
   private bool _masterCautionAudioTriggered;
   private readonly NotificationDisplayHelper _notificationSystem;
@@ -238,9 +239,8 @@ public partial class FighterHUD
     CreateHUD();
   }
 
-  public override void OnItemLoaded()
+  private void OnItemLoadedClient()
   {
-    base.OnItemLoaded();
     CreateHUD();
   }
 
@@ -290,7 +290,7 @@ public partial class FighterHUD
         {
           DrawNotifications();
         }
-        
+
         _masterCautionAudio?.Draw(batch);
 
         UpdateSoundQueue();
@@ -301,30 +301,35 @@ public partial class FighterHUD
         void DrawDepthGauge()
         {
           // --- Draw Depth Gauge
-          
+
           DrawLineWithShadow(batch, _depthBar.Top, _depthBar.Bottom, _gaugeLineColor, width: 3f);
           // top, bottom, middle notches
           DrawLineWithShadow(batch, _depthBarTopNotch.Start, _depthBarTopNotch.End, _gaugeLineColor, width: 3f);
           DrawLineWithShadow(batch, _depthBarBottomNotch.Start, _depthBarBottomNotch.End, _gaugeLineColor, width: 3f);
           DrawLineWithShadow(batch, _depthBarMidNotch.Start, _depthBarMidNotch.End, _gaugeLineColor, width: 3f);
-      
+
           // in-between moving lines
           DrawDepthTape(_currentPosition.Y);
-          
+
           // depth number
-          Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
-          GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor, font: _gaugePrimaryNumberFont);
-          GUI.DrawString(batch, offsetDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Depth", _gaugeTextColor, font: _gaugeNotchNumberFont);
+          Vector2 offsetDepthTextPos = _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) *
+            new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
+          GUI.DrawString(batch, offsetDepthTextPos, _currentPosition.Y.ToString("0000"), _gaugeTextColor,
+            font: _gaugePrimaryNumberFont);
+          GUI.DrawString(batch, offsetDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Depth",
+            _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
-        
+
         void DrawDepthTape(float currentDepth)
         {
           float minDisplayableDepth = currentDepth - (_depthBarMidPoint - _depthBar.Top.Y) / _depthNotchPixelsPerUnit;
 
           // this is the lowest value notch that can display
-          float minDepthNotchValue = GAUGE_NOTCH_DEPTH_SEPARATION - (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION) + minDisplayableDepth;
-          float notchOffset = (GAUGE_NOTCH_DEPTH_SEPARATION - (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION)) * _depthNotchPixelsPerUnit;
-          
+          float minDepthNotchValue = GAUGE_NOTCH_DEPTH_SEPARATION -
+            (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION) + minDisplayableDepth;
+          float notchOffset = (GAUGE_NOTCH_DEPTH_SEPARATION - (minDisplayableDepth % GAUGE_NOTCH_DEPTH_SEPARATION)) *
+                              _depthNotchPixelsPerUnit;
+
           for (int i = 0; i < GAUGE_NOTCH_DEPTH_LINES_COUNT; i++)
           {
             float vertOffset = notchOffset + i * _depthNotchPixelSeparation;
@@ -333,15 +338,18 @@ public partial class FighterHUD
             {
               continue;
             }
+
             DrawDepthTapeNotch(batch, vertOffset, notchDepth);
           }
-          
+
         }
-        
+
         void DrawDepthTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float depthValue)
-        { 
-          DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop), _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
-          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 15f, distanceFromTop - 5f), depthValue.ToString("0000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
+        {
+          DrawLineWithShadow(spriteBatch, _depthBar.Top + new Vector2(0f, distanceFromTop),
+            _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
+          GUI.DrawString(spriteBatch, _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 15f, distanceFromTop - 5f),
+            depthValue.ToString("0000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
 
         #endregion
@@ -356,26 +364,31 @@ public partial class FighterHUD
           DrawLineWithShadow(batch, _speedBarTopNotch.Start, _speedBarTopNotch.End, _gaugeLineColor, width: 3f);
           DrawLineWithShadow(batch, _speedBarBottomNotch.Start, _speedBarBottomNotch.End, _gaugeLineColor, width: 3f);
           DrawLineWithShadow(batch, _speedBarMidNotch.Start, _speedBarMidNotch.End, _gaugeLineColor, width: 3f);
-     
+
           // in-between moving lines
           // tests: speed number
           float speed = (float)Math.Sqrt(Math.Pow(_currentVelocity.X, 2) + Math.Pow(_currentVelocity.Y, 2));
 
           DrawSpeedTape(speed);
-          
-          Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top + (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
-          GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor, font: _gaugePrimaryNumberFont);
-          GUI.DrawString(batch, offsetSpeedtextPos + new Vector2(0f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Speed", _gaugeTextColor, font: _gaugeNotchNumberFont);
+
+          Vector2 offsetSpeedtextPos = _gaugeFixedOffsetSpeed + _speedBar.Top +
+                                       (_speedBar.Bottom - _speedBar.Top) * _gaugeRelativeOffset;
+          GUI.DrawString(batch, offsetSpeedtextPos, speed.ToString("000"), _gaugeTextColor,
+            font: _gaugePrimaryNumberFont);
+          GUI.DrawString(batch, offsetSpeedtextPos + new Vector2(0f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Speed",
+            _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
-        
+
         void DrawSpeedTape(float currentSpeed)
         {
           float minDisplayableSpeed = currentSpeed - (_speedBarMidPoint - _speedBar.Top.Y) / _speedNotchPixelsPerUnit;
 
           // this is the lowest value notch that can display
-          float minSpeedNotchValue = GAUGE_NOTCH_SPEED_SEPARATION - (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION) + minDisplayableSpeed;
-          float notchOffset = (GAUGE_NOTCH_SPEED_SEPARATION - (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION)) * _speedNotchPixelsPerUnit;
-          
+          float minSpeedNotchValue = GAUGE_NOTCH_SPEED_SEPARATION -
+            (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION) + minDisplayableSpeed;
+          float notchOffset = (GAUGE_NOTCH_SPEED_SEPARATION - (minDisplayableSpeed % GAUGE_NOTCH_SPEED_SEPARATION)) *
+                              _speedNotchPixelsPerUnit;
+
           for (int i = 0; i < GAUGE_NOTCH_SPEED_LINES_COUNT; i++)
           {
             float vertOffset = notchOffset + i * _speedNotchPixelSeparation;
@@ -384,25 +397,28 @@ public partial class FighterHUD
             {
               continue;
             }
+
             DrawSpeedTapeNotch(batch, vertOffset, notchSpeed);
           }
-          
+
         }
-        
+
         void DrawSpeedTapeNotch(SpriteBatch spriteBatch, float distanceFromTop, float speedValue)
-        { 
-          DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop), _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
-          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 35f, distanceFromTop - 5f), speedValue.ToString("000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
+        {
+          DrawLineWithShadow(spriteBatch, _speedBar.Top + new Vector2(0f, distanceFromTop),
+            _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH, distanceFromTop), _gaugeLineColor, width: 2f);
+          GUI.DrawString(spriteBatch, _speedBar.Top + new Vector2(-GAUGE_NOTCH_LINES_WIDTH - 35f, distanceFromTop - 5f),
+            speedValue.ToString("000"), _gaugeTextColor, font: _gaugeNotchNumberFont);
         }
 
         #endregion
 
         #region INFO_TEXTS
-        
+
         void DrawCrushDepthWarnings()
         {
           CheckInitCrushDepthWarningComponent();
-          
+
           // we do audio using draw() so that it's only played on the client if they are controlling the periscope.
           _crushDepthWarningInfo?.Draw(batch);
           _crushDepthWarningAudio?.Draw(batch);
@@ -410,8 +426,9 @@ public partial class FighterHUD
 
         void DrawNotifications()
         {
-          var drawPos = new Vector2(_notificationsAreaTopLeftRelative.X * _screenDrawSize.X + _screenDrawArea.TopLeft.X, _notificationsAreaTopLeftRelative.Y * _screenDrawSize.Y + _screenDrawArea.TopLeft.Y);
-          
+          var drawPos = new Vector2(_notificationsAreaTopLeftRelative.X * _screenDrawSize.X + _screenDrawArea.TopLeft.X,
+            _notificationsAreaTopLeftRelative.Y * _screenDrawSize.Y + _screenDrawArea.TopLeft.Y);
+
           _notificationSystem.Draw(batch, drawPos, out var finalPos);
         }
 
@@ -429,17 +446,22 @@ public partial class FighterHUD
       {
         InitCrushDepthWarningAudioComponent();
       }
-      
+
       void InitCrushDepthWarningDisplayComponent()
       {
         _crushDepthWarningInfo = new RenderHelperComponent(
           onDraw: (comp, batch) =>
           {
-            Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top + (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X, _gaugeRelativeOffset.Y); // invert X
-            _dangerIcon.Draw(batch, offsetCrushDepthTextPos + _dangerIconFixedOffset + _crushDepthDangerIconFixedOffset, Color.White, 
+            Vector2 offsetCrushDepthTextPos = _gaugeFixedOffsetCrushDepth + _gaugeFixedOffsetDepth + _depthBar.Top +
+                                              (_depthBar.Bottom - _depthBar.Top) * new Vector2(-_gaugeRelativeOffset.X,
+                                                _gaugeRelativeOffset.Y); // invert X
+            _dangerIcon.Draw(batch, offsetCrushDepthTextPos + _dangerIconFixedOffset + _crushDepthDangerIconFixedOffset,
+              Color.White,
               _dangerIcon.RelativeOrigin, 0f, _dangerIcon.RelativeSize);
-            GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerColor, font: _gaugePrimaryNumberFont);
-            GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION), "Crush Depth", _infoTextsDangerColor, font: _gaugeNotchNumberFont);
+            GUI.DrawString(batch, offsetCrushDepthTextPos, _submarineCrushDepth.ToString("0000"), _infoTextsDangerColor,
+              font: _gaugePrimaryNumberFont);
+            GUI.DrawString(batch, offsetCrushDepthTextPos + new Vector2(5f, GAUGE_NUMBER_DESC_VERT_SEPARATION),
+              "Crush Depth", _infoTextsDangerColor, font: _gaugeNotchNumberFont);
           },
           onUpdate: (comp, deltaTime) =>
           {
@@ -456,29 +478,84 @@ public partial class FighterHUD
         _crushDepthWarningAudio = new RenderHelperComponent(onDraw: (comp, batch) =>
           {
             var depthWarning = _sounds["depth-limit-0-female"];
-            _soundQueue.Enqueue((() => !depthWarning.IsPlaying(), depthWarning));
+            _soundQueue.Enqueue((() =>
+            {
+              // we want to stop enqueuing sounds until the one in queue is played, so we re-enable right before playing the sound.
+              comp.ShouldUpdate = true;
+              return !depthWarning.IsPlaying();
+            }, depthWarning));
             comp.FlashingDutyTimeRemaining = 0f;
-          }, 
+            comp.ShouldUpdate = false;
+          },
           onUpdate: (comp, deltaTime) =>
           {
             comp.ShouldRender = GetDistanceToCrushDepth() < CrushDepthDistanceThresholdAudio;
           }, false, true);
-              
+
         _crushDepthWarningAudio.FlashingEnabled = true;
         _crushDepthWarningAudio.FlashDuration = CRUSH_DEPTH_AUDIO_WARNING_INTERVAL;
-        _crushDepthWarningAudio.FlashingDutyCycle = 1f;  // disabled in draw after playing
+        _crushDepthWarningAudio.FlashingDutyCycle = 1f; // disabled in draw after playing
+      }
+    }
+
+    void CheckInitHullDamageWarning()
+    {
+      if (_hullDamageWarningInfo is null)
+      {
+        _hullDamageWarningInfo = new RenderHelperComponent(onDraw: (comp, batch) =>
+          {
+            _notificationHullDamaged.IsEnabled = true;
+            comp.ShouldRender = false;
+          }, onUpdate: (comp, deltaTime) =>
+          {
+            comp.ShouldRender = _hullHpPercent < HullIntegrityWarningThreshold;
+          },
+          shouldRender: false, shouldUpdate: true);
+      }
+
+      if (_hullDamageWarningAudio is null)
+      {
+        _hullDamageWarningAudio = new RenderHelperComponent(onDraw: (comp, batch) =>
+          {
+            if (comp.ShouldUpdate)
+            {
+              var sound = _sounds["hull-integrity"];
+              _soundQueue.Enqueue((() => !sound.IsPlaying(), sound));
+              comp.ShouldUpdate = false;
+              return;
+            }
+
+            if (_hullHpPercent > HullIntegrityWarningThreshold)
+            {
+              comp.ShouldUpdate = true;
+              comp.ShouldRender = false;
+            }
+          }, onUpdate: (comp, deltaTime) =>
+          {
+            if (_hullHpPercent < HullIntegrityWarningThreshold)
+            {
+              comp.ShouldRender = true;
+            }
+          },
+          shouldRender: false, shouldUpdate: true);
       }
     }
 
     float GetDistanceToCrushDepth() => _submarineCrushDepth - _currentPosition.Y;
-    
+
     void UpdateSoundQueue()
     {
       if (_activeSound is not null && _activeSound.IsPlaying())
       {
         return;
       }
-      
+
+      // don't play enqueued sounds while not in use if supported.
+      if (_controller is not null && _controller.User is null)
+      {
+        return;
+      }
+
       if (_soundQueue.TryDequeue(out var enqueuedSound))
       {
         if (enqueuedSound.Condition())
@@ -496,15 +573,17 @@ public partial class FighterHUD
         notification.Value.IsEnabled = false;
       }
     }
-    
+
     void SetLoadedNotificationStatesConditional(out bool notificationsActive)
     {
       notificationsActive = false;
       //_notifications["power-low"].IsEnabled = // not implemented
       //_notifications["descent-speed-high"].IsEnabled = // not implemented
-      notificationsActive |= CheckSetNotification(in _notificationDepthLimit, () => GetDistanceToCrushDepth() < CrushDepthDistanceThreshold);
-      notificationsActive |= CheckSetNotification(in _notificationHullDamaged, () => _hullHpPercent < HullIntegrityWarningThreshold);
-      
+      notificationsActive |= CheckSetNotification(in _notificationDepthLimit,
+        () => GetDistanceToCrushDepth() < CrushDepthDistanceThreshold);
+      notificationsActive |=
+        CheckSetNotification(in _notificationHullDamaged, () => _hullHpPercent < HullIntegrityWarningThreshold);
+
       bool CheckSetNotification(in NotificationDisplayHelper.Notification notification, Func<bool> predicate)
       {
         bool val = predicate();
@@ -512,7 +591,7 @@ public partial class FighterHUD
         return val;
       }
     }
-    
+
     void DrawStatusInfoTexts(SpriteBatch batch, Vector2 infoTextsNextRenderPosition)
     {
       if (RenderPrimaryAmmoCounter)
@@ -536,15 +615,20 @@ public partial class FighterHUD
         var valueColor = Color.Lerp(_infoTextsValueLowColor, _infoTextsValueHighColor, adjustedHpRatio);
         DrawInfoTextBottomArea(HullIntegrityName, displayedHpPercentage, valueColor);
         _notificationHullDamaged.IsEnabled = displayedHpPercentage < 99f;
+
+        CheckInitHullDamageWarning();
+        _hullDamageWarningInfo?.Draw(batch);
+        _hullDamageWarningAudio?.Draw(batch);
       }
-      
+
       void DrawInfoTextBottomArea(string infoDescription, float infoValue, Color infoValueColor)
       {
         var pos = GetNextInfoTextsPosition();
         GUI.DrawString(batch, pos, infoDescription, _infoTextsDescriptionColor, font: _infoTextsDescriptionFont);
-        GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor, font: _infoTextsValuesFont);
+        GUI.DrawString(batch, pos + _infoTextsValuesOffset, $"{infoValue.ToString("F0")}", infoValueColor,
+          font: _infoTextsValuesFont);
       }
-      
+
       Vector2 GetNextInfoTextsPosition()
       {
         var curr = infoTextsNextRenderPosition;
@@ -552,15 +636,16 @@ public partial class FighterHUD
         return curr;
       }
     }
-    
+
     void DrawLineWithShadow(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float depth = 0f,
       float width = 1f)
     {
-      GUI.DrawLine(spriteBatch, start, end, new Color(20, 20, 20, 100), depth+1, width+3);
-      GUI.DrawLine(spriteBatch, start, end, new Color(color.R/2, color.G/2, color.B/2, 175), depth+1, width+1);
+      GUI.DrawLine(spriteBatch, start, end, new Color(20, 20, 20, 100), depth + 1, width + 3);
+      GUI.DrawLine(spriteBatch, start, end, new Color(color.R / 2, color.G / 2, color.B / 2, 175), depth + 1,
+        width + 1);
       GUI.DrawLine(spriteBatch, start, end, color, depth, width);
     }
-    
+
     void CalculateDrawArea()
     {
       _screenDrawSize = new Vector2(GameMain.GraphicsWidth * GuiSizeRatioX, GameMain.GraphicsHeight * GuiSizeRatioY);
@@ -569,33 +654,37 @@ public partial class FighterHUD
       _screenDrawArea = (
         TopLeft: new Vector2(spacingHorizontal, spacingVertical),
         TopRight: new Vector2(GameMain.GraphicsWidth - spacingHorizontal, spacingVertical),
-        BottomRight: new Vector2(GameMain.GraphicsWidth -spacingHorizontal, GameMain.GraphicsHeight - spacingVertical),
+        BottomRight: new Vector2(GameMain.GraphicsWidth - spacingHorizontal, GameMain.GraphicsHeight - spacingVertical),
         BottomLeft: new Vector2(spacingHorizontal, GameMain.GraphicsHeight - spacingVertical));
-      
+
       _depthBar = (
-      Top: _screenDrawArea.TopLeft + new Vector2(_barLinesPadding.X, _barLinesPadding.Y),
-      Bottom: _screenDrawArea.BottomLeft + new Vector2(_barLinesPadding.X, -_barLinesPadding.Y));
-    
+        Top: _screenDrawArea.TopLeft + new Vector2(_barLinesPadding.X, _barLinesPadding.Y),
+        Bottom: _screenDrawArea.BottomLeft + new Vector2(_barLinesPadding.X, -_barLinesPadding.Y));
+
       _speedBar = (
         Top: _screenDrawArea.TopRight + new Vector2(-_barLinesPadding.X, _barLinesPadding.Y),
         Bottom: _screenDrawArea.BottomRight + new Vector2(-_barLinesPadding.X, -_barLinesPadding.Y));
 
       _depthBarMidPoint = (_depthBar.Bottom.Y + _depthBar.Top.Y) / 2f;
       _speedBarMidPoint = (_speedBar.Bottom.Y + _speedBar.Top.Y) / 2f;
-      
+
       _depthBarTopNotch.Start = _depthBar.Top;
       _depthBarTopNotch.End = _depthBar.Top + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
       _depthBarBottomNotch.Start = _depthBar.Bottom;
       _depthBarBottomNotch.End = _depthBar.Bottom + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-      _depthBarMidNotch.Start = new Vector2(_depthBar.Top.X - GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, _depthBarMidPoint);
-      _depthBarMidNotch.End = new Vector2(_depthBar.Top.X, _depthBarMidPoint) + new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+      _depthBarMidNotch.Start =
+        new Vector2(_depthBar.Top.X - GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, _depthBarMidPoint);
+      _depthBarMidNotch.End = new Vector2(_depthBar.Top.X, _depthBarMidPoint) +
+                              new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
 
       _speedBarTopNotch.Start = _speedBar.Top;
       _speedBarTopNotch.End = _speedBar.Top - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
       _speedBarBottomNotch.Start = _speedBar.Bottom;
       _speedBarBottomNotch.End = _speedBar.Bottom - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
-      _speedBarMidNotch.Start = new Vector2(_speedBar.Top.X + GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, _speedBarMidPoint);
-      _speedBarMidNotch.End = new Vector2(_speedBar.Top.X, _speedBarMidPoint) - new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
+      _speedBarMidNotch.Start =
+        new Vector2(_speedBar.Top.X + GAUGE_NOTCH_MIDDLE_OUTEREXTENSION_LENGTH, _speedBarMidPoint);
+      _speedBarMidNotch.End = new Vector2(_speedBar.Top.X, _speedBarMidPoint) -
+                              new Vector2(GAUGE_NOTCH_LINES_WIDTH + 5f, 0f);
 
       _depthNotchPixelSeparation = (_depthBar.Bottom.Y - _depthBar.Top.Y) / GAUGE_NOTCH_DEPTH_LINES_COUNT;
       _speedNotchPixelSeparation = (_speedBar.Bottom.Y - _speedBar.Top.Y) / GAUGE_NOTCH_SPEED_LINES_COUNT;
@@ -606,8 +695,9 @@ public partial class FighterHUD
       _infoTextsValuesOffset = new Vector2(InfoTextsHorizontalOffset, -5f);
     }
   }
-  
-  
+
+
+
   void SetMasterCaution()
   {
     if (_masterCautionAudio is null)
@@ -644,6 +734,8 @@ public partial class FighterHUD
     _crushDepthWarningAudio?.Update(deltaTime);
     _masterCautionAudio?.Update(deltaTime);
     _notificationSystem?.Update(deltaTime);
+    _hullDamageWarningInfo?.Update(deltaTime);
+    _hullDamageWarningAudio?.Update(deltaTime);
   }
 
   public override void DrawHUD(SpriteBatch spriteBatch, Character character)

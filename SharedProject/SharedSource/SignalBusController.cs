@@ -15,6 +15,8 @@ public class SignalBusController : ItemComponent
   
   public SignalBusController(Item item, ContentXElement element) : base(item, element)
   {
+    // ReSharper disable once VirtualMemberCallInConstructor
+    IsActive = true;
     SignalBusInName = element.GetAttributeString("signalBusInName", "DataBusIn");
     SignalBusOutName = element.GetAttributeString("signalBusOutName", "DataBusOut");
   }
@@ -67,9 +69,14 @@ public class SignalBusController : ItemComponent
       return;
     }
 
-    var busContentId = Guid.Parse(signalComponents[1]);
+    var guidParseSuccess = Guid.TryParse(signalComponents[1], out var busContentId);
+    if (!guidParseSuccess)
+    {
+      return;
+    }
+    
     var source = signal.source.GetComponents<SignalBusController>()
-      .First(sbh => sbh.SignalBusOutName == signalComponents[0]);
+      .FirstOrDefault(sbc => sbc?.SignalBusOutName == signalComponents[0], null);
     if (source is null)
     {
       return;
@@ -98,6 +105,13 @@ public class SignalBusController : ItemComponent
 
   private bool TryGetDataObject(Guid busId, out (string MessageId, object Data) dataPack)
   {
-    return _dataCache.TryRemove(busId, out dataPack);
+    // remove the data from the cache once time has been given for signals to reach recipients.
+    // TTL = 2 seconds.
+    CoroutineManager.Invoke(() =>
+    {
+      _dataCache.TryRemove(busId, out _);
+    }, 2f);
+    
+    return _dataCache.TryGetValue(busId, out dataPack);
   }
 }

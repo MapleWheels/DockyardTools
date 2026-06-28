@@ -12,7 +12,7 @@ public class NotificationDisplayHelper
     public static Color DefaultDangerColor = Color.Red;
     // ReSharper disable once FieldCanBeMadeReadOnly.Global
     public static GUIFont DefaultFont = GUIStyle.SmallFont;
-    public static float DefaultVerticalSpacing = 10f;
+    public static float DefaultVerticalSpacing = 14f;
     
     public string Name { get; init; } 
     public MessagePriority Priority { get; init; }
@@ -141,12 +141,12 @@ public class NotificationDisplayHelper
         {
           break;
         }
-        GUI.DrawString(spriteBatch, topLeftPosition, notification.Message, notification.Color, null, 0, notification.Font);
+        GUI.DrawString(spriteBatch, currentPos, notification.Message, notification.Color, null, 0, notification.Font);
         currentPos.Y += notification.VerticalSpacing;
       }
     }
     
-    finalPosition = topLeftPosition;
+    finalPosition = currentPos;
   }
   
   public void AddMessage(Notification notification)

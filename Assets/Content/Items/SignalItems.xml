@@ -178,6 +178,7 @@
         <Sound name="clacker" file="%ModDir%/Sounds/clacker.ogg" volume="100"/>
         <Sound name="master_caution" file="%ModDir%/Sounds/master_caution.ogg" volume="100"/>
         <Sound name="depth-limit-0-female" file="%ModDir%/Sounds/voice/depth-limit-0-female.ogg" volume="80"/>
+        <Sound name="hull-integrity" file="%ModDir%/Sounds/voice/hull-integrity-compromised-0-female.ogg" volume="80"/>
       </Sounds>
       <Sprites>
         <Sprite name="danger-indicator-icon" texture="%ModDir%/GUI/danger-indicator-icon-0.png" size="0.125,0.125" sourcerect="0,0,512,512"/>
@@ -203,8 +204,8 @@
       <sound file="Content/Items/Command/SonarPing.ogg" type="OnUse" range="1000.0" />
       <sound file="Content/Items/Command/SonarPing2.ogg" type="OnUse" range="1000.0" />
       <StatusEffect type="OnUse">
-        <sound file="Content/Items/Command/SonarPingFar.ogg"  type="OnUse" range="6000.0" volume="0.8" />
         <sound file="Content/Items/Command/SonarPingFar2.ogg" type="OnUse" range="6000.0" volume="0.8" />
+        <sound file="Content/Items/Command/SonarPingFar.ogg"  type="OnUse" range="6000.0" volume="0.8" />
       </StatusEffect>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5" />
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
