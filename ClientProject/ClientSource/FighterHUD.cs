@@ -579,10 +579,8 @@ public partial class FighterHUD
       notificationsActive = false;
       //_notifications["power-low"].IsEnabled = // not implemented
       //_notifications["descent-speed-high"].IsEnabled = // not implemented
-      notificationsActive |= CheckSetNotification(in _notificationDepthLimit,
-        () => GetDistanceToCrushDepth() < CrushDepthDistanceThreshold);
-      notificationsActive |=
-        CheckSetNotification(in _notificationHullDamaged, () => _hullHpPercent < HullIntegrityWarningThreshold);
+      notificationsActive |= CheckSetNotification(in _notificationDepthLimit, () => GetDistanceToCrushDepth() < CrushDepthDistanceThreshold);
+      notificationsActive |= CheckSetNotification(in _notificationHullDamaged, () => RenderHullIntegrity && _hullHpPercent < HullIntegrityWarningThreshold);
 
       bool CheckSetNotification(in NotificationDisplayHelper.Notification notification, Func<bool> predicate)
       {
